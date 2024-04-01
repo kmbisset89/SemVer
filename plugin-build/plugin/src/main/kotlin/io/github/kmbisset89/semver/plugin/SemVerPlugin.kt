@@ -40,7 +40,7 @@ abstract class SemVerPlugin : Plugin<Project> {
         val majorVersionTask = project.tasks.register(BUMP_MAJOR_TASK_NAME, BumpMajorVersionTask::class.java) {
 
             }
-        
+
 
     }
 }
