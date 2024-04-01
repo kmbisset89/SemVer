@@ -20,19 +20,6 @@ class DetermineCurrentVersionTest {
     @DisplayName("Given a DetermineCurrentVersion instance")
     inner class DetermineCurrentVersionInstance {
 
-//        @Nested
-//        @DisplayName("When determineCurrentVersion is called from a real git repository")
-//        inner class DetermineCurrentVersionCalled {
-//
-//            @Test
-//            @DisplayName("Then it returns a version number")
-//            fun `determineCurrentVersion returns a version number`() {
-//                val determineCurrentVersion = DetermineCurrentVersion()
-//                val version = determineCurrentVersion.determineCurrentVersion("C:\\dev\\git\\HERC", "root")
-//                assertTrue(version !is SemVer.Default)
-//            }
-//        }
-
         @Nested
         @DisplayName("When determineCurrentVersion is called from a mocked git repository")
         inner class DetermineCurrentVersionCalledMocked {
