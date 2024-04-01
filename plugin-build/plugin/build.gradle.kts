@@ -9,8 +9,13 @@ plugins {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(gradleApi())
-
-    testImplementation(libs.junit)
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.jgit)
+    testImplementation(libs.junit5.api)
+    testImplementation(libs.junit5.engine)
+    testImplementation(libs.junit5.params)
+    testImplementation(libs.junit5.platform)
+    testImplementation(libs.mockk)
 }
 
 java {
@@ -54,4 +59,8 @@ tasks.create("setupPluginUploadFromEnvironment") {
         System.setProperty("gradle.publish.key", key)
         System.setProperty("gradle.publish.secret", secret)
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
