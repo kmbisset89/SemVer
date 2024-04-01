@@ -25,9 +25,22 @@ abstract class SemVerPlugin : Plugin<Project> {
         )
 
         // Add a task that uses configuration from the extension object
-        val task =
-            project.tasks.register(BUMP_RELEASE_CANDIDATE_TASK_NAME, BumpReleaseCandidateVersionTask::class.java) {
+        val releaseCandidateVersionTask = project.tasks.register(BUMP_RELEASE_CANDIDATE_TASK_NAME, BumpReleaseCandidateVersionTask::class.java) {
 
             }
+
+        val patchVersionTask = project.tasks.register(BUMP_PATCH_TASK_NAME, BumpPatchVersionTask::class.java) {
+
+            }
+
+        val minorVersionTask = project.tasks.register(BUMP_MINOR_TASK_NAME, BumpMinorVersionTask::class.java) {
+
+            }
+
+        val majorVersionTask = project.tasks.register(BUMP_MAJOR_TASK_NAME, BumpMajorVersionTask::class.java) {
+
+            }
+        
+
     }
 }
