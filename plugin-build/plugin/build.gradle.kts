@@ -51,11 +51,11 @@ gradlePlugin {
 
 tasks.create("setupPluginUploadFromEnvironment") {
     doLast {
-        val localProperties = Properties()
-        localProperties.load(FileInputStream(rootProject.file("local.properties")))
+        val localProperties = if(rootProject.file("local.properties").exists()) Properties() else null
+        localProperties?.load(FileInputStream(rootProject.file("local.properties")))
 
-        val key = localProperties["gradle.publish.key"] as? String ?: System.getenv("gradlePublishKey")
-        val secret = localProperties["gradle.publish.secret"] as? String ?: System.getenv("gradlePublishSecret")
+        val key = localProperties?.get("gradle.publish.key") as? String ?: System.getenv("gradlePublishKey")
+        val secret = localProperties?.get("gradle.publish.secret") as? String ?: System.getenv("gradlePublishSecret")
 
         if (key == null || secret == null) {
             throw GradleException("gradlePublishKey and/or gradlePublishSecret are not defined environment variables")
