@@ -28,7 +28,7 @@ class PropertyResolver(private val project: Project, considerLocalPropertiesFile
      * @param defaultValue The default value to return if the property is not found. Defaults to `null`.
      * @return The property value as a string or `defaultValue` if the property is not found.
      */
-    override fun getStringProp(propertyName: String, defaultValue: String?): String? {
+    override fun getStringProp(propertyName: String, defaultValue: String? ): String? {
         return getProp(propertyName, defaultValue) as String?
     }
 

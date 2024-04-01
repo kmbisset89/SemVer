@@ -41,10 +41,14 @@ sealed class SemVer {
         override fun toString(): String = "$major.$minor.$patch-rc.$releaseCandidateNumber"
     }
 
+    /**
+     * Represents the default version when no version can be determined.
+     */
     data object Default : SemVer() {
         override val major: Int = 0
         override val minor: Int = 0
         override val patch: Int = 0
+        override fun toString(): String = "0.0.0"
     }
 }
 

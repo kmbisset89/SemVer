@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.FileInputStream
+import java.util.*
 
 plugins {
     kotlin("jvm")
@@ -49,8 +51,11 @@ gradlePlugin {
 
 tasks.create("setupPluginUploadFromEnvironment") {
     doLast {
-        val key = System.getenv("GRADLE_PUBLISH_KEY")
-        val secret = System.getenv("GRADLE_PUBLISH_SECRET")
+        val localProperties = Properties()
+        localProperties.load(FileInputStream(rootProject.file("local.properties")))
+
+        val key = localProperties["gradle.publish.key"] as? String ?: System.getenv("gradlePublishKey")
+        val secret = localProperties["gradle.publish.secret"] as? String ?: System.getenv("gradlePublishSecret")
 
         if (key == null || secret == null) {
             throw GradleException("gradlePublishKey and/or gradlePublishSecret are not defined environment variables")
