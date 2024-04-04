@@ -51,9 +51,6 @@ simVerConfig {
 
 ### Usage
 
-
-#### Or
-
 Run the desired version bump task:
 
 ```
@@ -62,6 +59,15 @@ Run the desired version bump task:
 ./gradlew bumpMajor # Bumps the major version
 ./gradlew bumpReleaseCandidate # Bumps or creates a release candidate version
 ```
+
+### Recommendations for Getting Started
+
+If you are starting with no version history, then I recommend tagging your main branch with:
+```
+git tag "v0.1.0"
+git push --tags
+```
+Once you have done that, you can use the gradle task from then on out. 
 
 ### How It Works
 1. Determine Current Version: The plugin identifies the current version based on the latest Git tag following SemVer principles.
