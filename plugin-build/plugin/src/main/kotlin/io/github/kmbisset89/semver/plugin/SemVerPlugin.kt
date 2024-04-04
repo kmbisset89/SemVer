@@ -22,8 +22,7 @@ abstract class SemVerPlugin : Plugin<Project> {
                 DetermineCurrentVersion().determineCurrentVersion(
                     extension.gitDirectory.orNull,
                     extension.baseBranchName.orNull
-                ),
-                (project.property("isBeta") as? Boolean) ?: (false)
+                )
             )
         }
 
