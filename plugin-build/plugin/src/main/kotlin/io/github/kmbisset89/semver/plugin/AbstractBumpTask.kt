@@ -53,8 +53,8 @@ abstract class AbstractBumpTask(description: String, private val bumpLevel: Bump
     abstract val baseBranchName: Property<String>
 
     @get:Input
-    @get:Option(option = "gitUser", description = "The user to be used for the git operations")
-    abstract val gitUser: Property<String>
+    @get:Option(option = "gitEmail", description = "The user to be used for the git operations")
+    abstract val gitEmail: Property<String>
 
     @get:Input
     @get:Option(option = "gitPat", description = "The personal access token to be used for the git operations")
@@ -86,7 +86,7 @@ abstract class AbstractBumpTask(description: String, private val bumpLevel: Bump
         // Tag the Git repository with the new version, and apply necessary Git user and PAT for operations.
         SetVersionGitTagUseCase().invoke(
             gitDirectory.get(),
-            gitUser.get(),
+            gitEmail.get(),
             gitPat.get(),
             newVersion,
             propertyResolver.getStringProp("overrideBranch"),
