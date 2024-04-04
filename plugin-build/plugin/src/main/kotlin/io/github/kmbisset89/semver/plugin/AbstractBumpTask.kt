@@ -50,7 +50,7 @@ abstract class AbstractBumpTask(description: String, private val bumpLevel: Bump
 
     @get:Input
     @get:Option(option = "gitBranch", description = "The branch to be used for the versioning")
-    abstract val gitBranch: Property<String>
+    abstract val baseBranchName: Property<String>
 
     @get:Input
     @get:Option(option = "gitUser", description = "The user to be used for the git operations")
@@ -77,7 +77,7 @@ abstract class AbstractBumpTask(description: String, private val bumpLevel: Bump
         // Determine the current project version based on Git tags.
         val currentVersion = DetermineCurrentVersion().determineCurrentVersion(
             gitDirectory.get(),
-            propertyResolver.getStringProp("overrideBranch") ?: gitBranch.get()
+            propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get()
         )
 
         // Calculate the next version based on the current version and the bump level.
