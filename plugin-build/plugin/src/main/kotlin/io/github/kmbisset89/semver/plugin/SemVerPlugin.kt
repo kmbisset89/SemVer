@@ -6,10 +6,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 const val EXTENSION_NAME = "semVerConfig"
-const val BUMP_RELEASE_CANDIDATE_TASK_NAME = "bumpReleaseCandidate"
-const val BUMP_PATCH_TASK_NAME = "bumpPatch"
-const val BUMP_MINOR_TASK_NAME = "bumpMinor"
-const val BUMP_MAJOR_TASK_NAME = "bumpMajor"
+const val BUMP_TASK_NAME = "bumpVersion"
 
 abstract class SemVerPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -27,38 +24,13 @@ abstract class SemVerPlugin : Plugin<Project> {
             )
         }
 
-        // Add a task that uses configuration from the extension object
         val releaseCandidateVersionTask =
-            project.tasks.register(BUMP_RELEASE_CANDIDATE_TASK_NAME, BumpReleaseCandidateVersionTask::class.java) {
+            project.tasks.register(BUMP_TASK_NAME, BumpVersionTask::class.java) {
                 it.gitDirectory.set(extension.gitDirectory)
                 it.baseBranchName.set(extension.baseBranchName)
                 it.gitEmail.set(extension.gitEmail)
                 it.gitPat.set(extension.gitPat)
                 it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
             }
-
-        val patchVersionTask = project.tasks.register(BUMP_PATCH_TASK_NAME, BumpPatchVersionTask::class.java) {
-            it.gitDirectory.set(extension.gitDirectory)
-            it.baseBranchName.set(extension.baseBranchName)
-            it.gitEmail.set(extension.gitEmail)
-            it.gitPat.set(extension.gitPat)
-            it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
-        }
-
-        val minorVersionTask = project.tasks.register(BUMP_MINOR_TASK_NAME, BumpMinorVersionTask::class.java) {
-            it.gitDirectory.set(extension.gitDirectory)
-            it.baseBranchName.set(extension.baseBranchName)
-            it.gitEmail.set(extension.gitEmail)
-            it.gitPat.set(extension.gitPat)
-            it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
-        }
-
-        val majorVersionTask = project.tasks.register(BUMP_MAJOR_TASK_NAME, BumpMajorVersionTask::class.java) {
-            it.gitDirectory.set(extension.gitDirectory)
-            it.baseBranchName.set(extension.baseBranchName)
-            it.gitEmail.set(extension.gitEmail)
-            it.gitPat.set(extension.gitPat)
-            it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
-        }
     }
 }

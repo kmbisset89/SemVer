@@ -12,5 +12,16 @@ enum class BumpLevel {
     MAJOR,
     MINOR,
     PATCH,
-    RELEASE_CANDIDATE
+    RELEASE_CANDIDATE;
+    companion object{
+
+        fun getLevel(string: String): BumpLevel {
+            return when(string.lowercase()){
+                "major", "m" -> MAJOR
+                "minor", "n" -> MINOR
+                "patch", "p" -> PATCH
+                else ->  RELEASE_CANDIDATE
+            }
+        }
+    }
 }

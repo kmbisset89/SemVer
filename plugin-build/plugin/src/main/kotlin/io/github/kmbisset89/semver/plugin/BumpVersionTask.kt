@@ -4,7 +4,6 @@ import io.github.kmbisset89.semver.plugin.logic.BumpLevel
 import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
 import io.github.kmbisset89.semver.plugin.logic.DetermineNextVersionUseCase
 import io.github.kmbisset89.semver.plugin.logic.PropertyResolver
-import io.github.kmbisset89.semver.plugin.logic.SemVer
 import io.github.kmbisset89.semver.plugin.logic.SetVersionGitTagUseCase
 import org.gradle.api.DefaultTask
 import org.gradle.api.plugins.BasePlugin
@@ -28,14 +27,12 @@ import org.gradle.api.tasks.options.Option
  * to password authentication.
  * @property considerLocalPropertiesFile Flag indicating whether to consider local properties file for
  * overriding certain task inputs, such as gitBranch.
- * @param description A brief description of the task's purpose, visible in Gradle task listings.
- * @param bumpLevel The level of version bump to apply (major, minor, patch, or release candidate).
  */
-abstract class AbstractBumpTask(description: String, private val bumpLevel: BumpLevel) : DefaultTask() {
+abstract class BumpVersionTask() : DefaultTask() {
 
     init {
         // Assign task description and categorize this task under Gradle's BUILD_GROUP.
-        this@AbstractBumpTask.description = description
+        this@BumpVersionTask.description = "Bumps the project version according to semantic versioning."
         group = BasePlugin.BUILD_GROUP
     }
 
@@ -79,6 +76,12 @@ abstract class AbstractBumpTask(description: String, private val bumpLevel: Bump
             gitDirectory.get(),
             propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get()
         )
+
+       val bumpLevel =  propertyResolver.getStringProp("bumpLevel")?.let {
+            BumpLevel.getLevel(it)
+        } ?: BumpLevel.RELEASE_CANDIDATE
+
+        println("Bumping version by $bumpLevel")
 
         // Calculate the next version based on the current version and the bump level.
         val newVersion = DetermineNextVersionUseCase().invoke(currentVersion, bumpLevel)

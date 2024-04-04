@@ -12,7 +12,7 @@ To use the plugin, add the following to your project's `build.gradle.kts` file:
 
 ```kotlin
 plugins {
-    id("io.github.kmbisset89.semver") version "1.0.11"
+    id("io.github.kmbisset89.semver") version "1.0.13"
 }
 ```
 
@@ -51,23 +51,29 @@ simVerConfig {
 
 ### Usage
 
-Run the desired version bump task:
+The main task provided by the plugin is `bumpVersion`, which increments the project's version based on the specified bump level. The following bump levels are supported:
 
-```
-./gradlew bumpPatch # Bumps the patch version
-./gradlew bumpMinor # Bumps the minor version
-./gradlew bumpMajor # Bumps the major version
-./gradlew bumpReleaseCandidate # Bumps or creates a release candidate version
+- `major` or `m` : Increments the major version.
+- `minor` or `n` : Increments the minor version.
+- `patch` or `p` : Increments the patch version.
+- `rc` : Increments the release candidate version. **This is the default and is not required to be set**
+
+
+Example:
+
+```bash
+./gradlew bumpVersion # Bumps the rc version
+./gradlew bumpVersion -PbumpLevel=major  # Bumps the major version
 ```
 
 ### Recommendations for Getting Started
 
 If you are starting with no version history, then I recommend tagging your main branch with:
-```
+```bash
 git tag "v0.1.0"
 git push --tags
 ```
-Once you have done that, you can use the gradle task from then on out. 
+Once you have done that, you can use the gradle task from then on out.
 
 ### How It Works
 1. Determine Current Version: The plugin identifies the current version based on the latest Git tag following SemVer principles.
