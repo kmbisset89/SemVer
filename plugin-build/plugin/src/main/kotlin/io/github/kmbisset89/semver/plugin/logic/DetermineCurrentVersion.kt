@@ -1,5 +1,6 @@
 package io.github.kmbisset89.semver.plugin.logic
 
+import io.github.kmbisset89.semver.plugin.logic.SemVerConstants.semVerRegex
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
@@ -49,7 +50,6 @@ class DetermineCurrentVersion {
 
         val branchCommit = revWalk.parseCommit(branchObjectId)
 
-        val semVerRegex = """v?(\d+)\.(\d+)\.(\d+)(-rc\.(\d+))?""".toRegex()
 
         val sortedTags = tags.mapNotNull { tag ->
             val tagCommit = revWalk.parseCommit(tag.objectId)

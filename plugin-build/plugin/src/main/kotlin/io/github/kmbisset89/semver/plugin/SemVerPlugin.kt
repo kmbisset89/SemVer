@@ -1,6 +1,6 @@
 package io.github.kmbisset89.semver.plugin
 
-import io.github.kmbisset89.semver.plugin.logic.CreateTimeStampVersion
+import io.github.kmbisset89.semver.plugin.logic.GetOrCreateCurrentVersionUseCase
 import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -16,16 +16,16 @@ abstract class SemVerPlugin : Plugin<Project> {
 
         val extension = project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
 
-
         project.afterEvaluate {
-            project.version = CreateTimeStampVersion().invoke(
+            project.version = GetOrCreateCurrentVersionUseCase().invoke(
                 DetermineCurrentVersion().determineCurrentVersion(
                     extension.gitDirectory.orNull,
                     extension.baseBranchName.orNull
-                )
+                ),
+                gitFilePath =  extension.gitDirectory.orNull,
+                baseBranchName = extension.baseBranchName.orNull
             )
         }
-
 
         // Add a task that uses configuration from the extension object
         val releaseCandidateVersionTask =
