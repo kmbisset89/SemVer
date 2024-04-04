@@ -6,9 +6,7 @@ import javax.inject.Inject
 
 
 @Suppress("UnnecessaryAbstractClass")
-abstract class SemVerExtension
-@Inject
-constructor(project: Project) {
+abstract class SemVerExtension constructor(project: Project) {
     private val objects = project.objects
 
     val gitDirectory: Property<String> = objects.property(String::class.java)
