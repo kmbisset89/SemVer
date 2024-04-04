@@ -43,7 +43,7 @@ class SetVersionGitTagUseCase {
         val git = gitFactory(repository)
 
         // Check if there are any uncommitted changes in the repository.
-        if (git.status().call().hasUncommittedChanges()){
+        if (!git.status().call().isClean){
             throw IllegalStateException("Cannot create a tag with uncommitted changes")
         }
 
