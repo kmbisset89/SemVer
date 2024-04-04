@@ -43,7 +43,7 @@ class SetVersionGitTagUseCase {
         val git = gitFactory(repository)
 
         // Check if there are any uncommitted changes in the repository.
-        if (!git.status().call().isClean){
+        if (areChangesPresent(git)) {
             throw IllegalStateException("Cannot create a tag with uncommitted changes")
         }
 
@@ -60,5 +60,16 @@ class SetVersionGitTagUseCase {
 
         // Push the tag to the remote repository using the provided credentials.
         git.push().setCredentialsProvider(credProvider).setPushTags().call()
+    }
+
+
+    private fun areChangesPresent(git: Git): Boolean {
+        val status = git.status().call()
+
+        // Check if there are any uncommitted changes
+        return status.added.isNotEmpty() ||
+            status.changed.isNotEmpty() ||
+            status.modified.isNotEmpty() ||
+            status.removed.isNotEmpty()
     }
 }
