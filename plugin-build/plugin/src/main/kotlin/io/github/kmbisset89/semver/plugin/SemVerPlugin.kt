@@ -5,7 +5,7 @@ import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-const val EXTENSION_NAME = "simVerConfig"
+const val EXTENSION_NAME = "semVerConfig"
 const val BUMP_RELEASE_CANDIDATE_TASK_NAME = "bumpReleaseCandidate"
 const val BUMP_PATCH_TASK_NAME = "bumpPatch"
 const val BUMP_MINOR_TASK_NAME = "bumpMinor"
@@ -16,13 +16,23 @@ abstract class SemVerPlugin : Plugin<Project> {
 
         val extension = project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
 
-        project.version = CreateTimeStampVersion().invoke(
-            DetermineCurrentVersion().determineCurrentVersion(
-                extension.gitDirectory.get(),
-                extension.baseBranchName.get()
-            ),
-            (project.property("isBeta") as? Boolean) ?: (false)
-        )
+
+        project.afterEvaluate {
+            if (extension.gitDirectory.get().isBlank()) {
+                throw IllegalArgumentException("Git directory must be set")
+            }
+            if (extension.baseBranchName.get().isBlank()) {
+                throw IllegalArgumentException("Base branch name must be set")
+            }
+            project.version = CreateTimeStampVersion().invoke(
+                DetermineCurrentVersion().determineCurrentVersion(
+                    extension.gitDirectory.get(),
+                    extension.baseBranchName.get()
+                ),
+                (project.property("isBeta") as? Boolean) ?: (false)
+            )
+        }
+
 
         // Add a task that uses configuration from the extension object
         val releaseCandidateVersionTask = project.tasks.register(BUMP_RELEASE_CANDIDATE_TASK_NAME, BumpReleaseCandidateVersionTask::class.java) {
