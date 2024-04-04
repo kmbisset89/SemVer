@@ -49,7 +49,7 @@ abstract class AbstractBumpTask(description: String, private val bumpLevel: Bump
     abstract val gitDirectory: Property<String>
 
     @get:Input
-    @get:Option(option = "gitBranch", description = "The branch to be used for the versioning")
+    @get:Option(option = "baseBranchName", description = "The branch to be used for the versioning")
     abstract val baseBranchName: Property<String>
 
     @get:Input
