@@ -18,16 +18,10 @@ abstract class SemVerPlugin : Plugin<Project> {
 
 
         project.afterEvaluate {
-            if (extension.gitDirectory.get().isBlank()) {
-                throw IllegalArgumentException("Git directory must be set")
-            }
-            if (extension.baseBranchName.get().isBlank()) {
-                throw IllegalArgumentException("Base branch name must be set")
-            }
             project.version = CreateTimeStampVersion().invoke(
                 DetermineCurrentVersion().determineCurrentVersion(
-                    extension.gitDirectory.get(),
-                    extension.baseBranchName.get()
+                    extension.gitDirectory.orNull,
+                    extension.baseBranchName.orNull
                 ),
                 (project.property("isBeta") as? Boolean) ?: (false)
             )

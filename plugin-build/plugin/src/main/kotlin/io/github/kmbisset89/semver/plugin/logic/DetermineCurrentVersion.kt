@@ -27,14 +27,16 @@ class DetermineCurrentVersion {
      * @return The current version as a [SemVer] instance. If no version can be determined, returns [SemVer.Default].
      */
     fun determineCurrentVersion(
-        gitFilePath: String,
-        branchName: String,
+        gitFilePath: String?,
+        branchName: String?,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
         gitFactory: (Repository) -> Git = { Git(it) },
         revWalkFactory: (Repository) -> RevWalk = { RevWalk(it) }
     ): SemVer {
+        if (gitFilePath == null || branchName == null) return SemVer.Default
+
         val repository = repositoryFactory(gitFilePath)
         val git = gitFactory(repository)
         val tags = git.tagList().call()
