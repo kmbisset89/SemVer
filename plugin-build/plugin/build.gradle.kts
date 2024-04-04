@@ -49,6 +49,10 @@ gradlePlugin {
     vcsUrl.set(property("VCS_URL").toString())
 }
 
+java{
+    withSourcesJar()
+}
+
 tasks.create("setupPluginUploadFromEnvironment") {
     doLast {
         val localProperties = if(rootProject.file("local.properties").exists()) Properties() else null
