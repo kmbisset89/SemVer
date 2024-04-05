@@ -12,7 +12,7 @@ To use the plugin, add the following to your project's `build.gradle.kts` file:
 
 ```kotlin
 plugins {
-    id("io.github.kmbisset89.semver") version "1.0.13"
+    id("io.github.kmbisset89.semver") version "1.0.14"
 }
 ```
 
