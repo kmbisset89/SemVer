@@ -77,14 +77,18 @@ abstract class BumpVersionTask() : DefaultTask() {
             propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get()
         )
 
-       val bumpLevel =  propertyResolver.getStringProp("bumpLevel")?.let {
+        val bumpLevel = propertyResolver.getStringProp("bumpLevel")?.let {
             BumpLevel.getLevel(it)
         } ?: BumpLevel.RELEASE_CANDIDATE
 
         println("Bumping version by $bumpLevel")
 
         // Calculate the next version based on the current version and the bump level.
-        val newVersion = DetermineNextVersionUseCase().invoke(currentVersion, bumpLevel)
+        val newVersion = DetermineNextVersionUseCase().invoke(
+            currentVersion,
+            bumpLevel,
+            propertyResolver.getRequiredBooleanProp("isFinal", false)
+        )
 
         // Tag the Git repository with the new version, and apply necessary Git user and PAT for operations.
         SetVersionGitTagUseCase().invoke(

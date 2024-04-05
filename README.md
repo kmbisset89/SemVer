@@ -66,6 +66,40 @@ Example:
 ./gradlew bumpVersion -PbumpLevel=major  # Bumps the major version
 ```
 
+### Behavior
+Default Behavior
+If no parameters are passed, the plugin defaults to incrementing the release candidate version and does not finalize the version:
+```bash
+./gradlew bumpVersion #This command will increment the release candidate number
+# (e.g., from 1.2.3-rc.1 to 1.2.3-rc.2).
+```
+#### Specifying Bump Level and Finalization
+You can control the version bump level (major, minor, patch, or rc) and whether to finalize the version through Gradle properties.
+
+Incrementing Release Candidate Version
+To increment the release candidate version without finalizing:
+```bash
+./gradlew bumpVersion -PbumpLevel="rc" #This command will increment the release candidate number
+# (e.g., from 1.2.3-rc.1 to 1.2.3-rc.2).
+```
+If you then bump the patch version, the release candidate number will be reset to 1:
+```bash
+./gradlew bumpVersion -PbumpLevel="patch" #This command will increment the patch number
+# (e.g., from 1.2.3-rc.2 to 1.2.4-rc.1).
+```
+
+If  you want to finalize the version, you can do so by passing the finalizeVersion property:
+```bash
+./gradlew bumpVersion  -PisFinal=true #This command will increment the release candidate number
+# (e.g., from 1.2.3-rc.2 to 1.2.3).
+```
+
+If you specify a bump level of major, minor, or patch and finalize the version, the level you specify will be incremented.
+```bash
+./gradlew bumpVersion -PbumpLevel="major" -PisFinal=true #This command will increment the major number
+# (e.g., from 1.2.3-rc.2 to 2.0.0).
+```
+
 ### Recommendations for Getting Started
 
 If you are starting with no version history, then I recommend tagging your main branch with:
