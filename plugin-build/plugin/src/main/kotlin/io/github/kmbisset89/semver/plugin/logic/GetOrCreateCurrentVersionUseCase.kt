@@ -67,7 +67,7 @@ class GetOrCreateCurrentVersionUseCase {
             branchType == TypeOfBranch.MAIN -> "${semVer.major}.${semVer.minor}.${semVer.patch}-$timeStampString"
             branchType == TypeOfBranch.RELEASE && !hasUncommittedChanges -> semVer.toString()
             branchType == TypeOfBranch.RELEASE && hasUncommittedChanges -> "${semVer.major}.${semVer.minor}.${semVer.patch + 1}-hotfix.$timeStampString"
-            branchType == TypeOfBranch.FEATURE || branchType == TypeOfBranch.BUGFIX -> "${semVer.major}.${semVer.minor}.${semVer.patch}-beta$timeStampString"
+            branchType == TypeOfBranch.FEATURE || branchType == TypeOfBranch.BUGFIX -> "${semVer.major}.${semVer.minor}.${semVer.patch}-beta.$timeStampString"
             else -> "${semVer.major}.${semVer.minor}.${semVer.patch}-alpha.$timeStampString"
         }
     }
@@ -80,13 +80,13 @@ class GetOrCreateCurrentVersionUseCase {
             return tags.any { tag ->
                 // Resolve the commit that the tag points to. This can be direct (lightweight tag) or indirect (annotated tag)
                 val commitId = if (tag.peeledObjectId != null) {
-                    revWalk.parseCommit(tag.peeledObjectId).id
+                    revWalk.parseCommit(tag.peeledObjectId)?.id
                 } else {
-                    revWalk.parseCommit(tag.objectId).id
+                    revWalk.parseCommit(tag.objectId)?.id
                 }
 
                 // Compare the HEAD commit's ID with the tag's commit ID
-                headCommitId?.name == commitId.name
+                headCommitId?.name == commitId?.name
             }
         }
     }
