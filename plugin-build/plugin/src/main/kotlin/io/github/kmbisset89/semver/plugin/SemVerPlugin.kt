@@ -13,14 +13,16 @@ abstract class SemVerPlugin : Plugin<Project> {
 
         val extension = project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
 
-        project.version = GetOrCreateCurrentVersionUseCase().invoke(
-            DetermineCurrentVersion().determineCurrentVersion(
-                extension.gitDirectory.orNull,
-                extension.baseBranchName.orNull
-            ),
-            gitFilePath = extension.gitDirectory.orNull,
-            baseBranchName = extension.baseBranchName.orNull
-        )
+        project.afterEvaluate {
+            project.version = GetOrCreateCurrentVersionUseCase().invoke(
+                DetermineCurrentVersion().determineCurrentVersion(
+                    extension.gitDirectory.orNull,
+                    extension.baseBranchName.orNull
+                ),
+                gitFilePath =  extension.gitDirectory.orNull,
+                baseBranchName = extension.baseBranchName.orNull
+            )
+        }
 
         val releaseCandidateVersionTask =
             project.tasks.register(BUMP_TASK_NAME, BumpVersionTask::class.java) {
