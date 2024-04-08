@@ -64,7 +64,7 @@ class GetOrCreateCurrentVersionUseCase {
         val tags = git.tagList().call()
 
         return when {
-            branchType == TypeOfBranch.MAIN && checkIfLastCommitIsTagged(tags, repository) -> semVer.toString()
+            branchType == TypeOfBranch.MAIN && checkIfLastCommitIsTagged(tags, repository, headCommit) -> semVer.toString()
             branchType == TypeOfBranch.MAIN -> "${semVer.major}.${semVer.minor}.${semVer.patch}-$timeStampString"
             branchType == TypeOfBranch.RELEASE && !hasUncommittedChanges -> semVer.toString()
             branchType == TypeOfBranch.RELEASE && hasUncommittedChanges -> "${semVer.major}.${semVer.minor}.${semVer.patch + 1}-hotfix.$timeStampString"
