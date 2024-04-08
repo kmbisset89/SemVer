@@ -21,7 +21,9 @@ abstract class SemVerPlugin : Plugin<Project> {
                 ),
                 gitFilePath = extension.gitDirectory.orNull,
                 baseBranchName = extension.baseBranchName.orNull,
-                headCommit = project.property("headCommit") as String?
+                headCommit = if (project.hasProperty("headCommit")) {
+                    project.property("headCommit") as String?
+                } else null
             )
         }
 
