@@ -74,26 +74,45 @@ class GetOrCreateCurrentVersionUseCase {
 
     private fun checkIfLastCommitIsTagged(tags: List<Ref>, repository: Repository): Boolean {
         RevWalk(repository).use { revWalk ->
-            // Resolve the HEAD commit, ensuring we safely handle a potential null value
-            val headCommitId = repository.resolve("HEAD")?.let { objectId -> revWalk.parseCommit(objectId)?.id }
+            // Attempt to resolve the HEAD commit
+            val headCommit = repository.resolve("HEAD")?.let { revWalk.parseCommit(it) }
+            val headCommitId = headCommit?.id
+
+            println("HEAD commit ID: ${headCommitId?.name}") // Debugging line
 
             if (headCommitId == null) {
-                // If HEAD commit cannot be resolved, return false as it cannot be tagged
+                println("HEAD commit cannot be resolved.") // Debugging line
                 return false
             }
 
-            return tags.any { tag ->
-                // Attempt to resolve the commit ID from the tag, handling annotated and lightweight tags
-                val commitId = (if (tag.peeledObjectId != null) tag.peeledObjectId else tag.objectId)?.let { objectId ->
-                    revWalk.parseCommit(objectId)?.id
+            tags.forEach { tag -> // Change 'any' to 'forEach' for debugging
+                // Determine the commit ID associated with the tag, handling both annotated and lightweight tags
+                val commitId = if (tag.peeledObjectId != null) {
+                    revWalk.parseCommit(tag.peeledObjectId)?.id
+                } else {
+                    revWalk.parseCommit(tag.objectId)?.id
                 }
 
-                // Only proceed with comparison if commitId is not null
-                commitId?.let {
-                    // Compare the HEAD commit's ID with the tag's commit ID
-                    it == headCommitId
-                } ?: false // Return false if commitId is null
+                println("Tag: ${tag.name}, Commit ID: ${commitId?.name}") // Debugging line
+
+                // Compare the HEAD commit's ID with the tag's commit ID safely, considering potential nullability of commitId
+                val isMatch = commitId?.let {
+                    if (headCommitId.name == null && it.name == null)
+                        false
+                    else {
+                        val comparisonResult = headCommitId.name == it.name
+                        println("Comparing ${headCommitId.name} to ${it.name}: $comparisonResult") // Debugging line
+                        comparisonResult
+                    }
+                } ?: false
+
+                // Debug: Print the result of comparing current tag commit ID with HEAD commit ID
+                println("Tag '${tag.name}' match with HEAD: $isMatch")
+
+                if (isMatch) return true // If a match is found, return true immediately
             }
+
+            return false // Return false if no matching tag is found after checking all
         }
     }
 
