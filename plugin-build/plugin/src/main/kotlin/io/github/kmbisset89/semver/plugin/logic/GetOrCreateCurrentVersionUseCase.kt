@@ -100,6 +100,9 @@ class GetOrCreateCurrentVersionUseCase {
                 }
 
                 commitId?.let {
+                    if (commitToCheckId?.name == null && commitId.name == null) {
+                        return false
+                    }
                     // Compare the specified commit's ID (or HEAD if not specified) with the tag's commit ID
                     commitToCheckId?.name == commitId.name
                 } ?: false
