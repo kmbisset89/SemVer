@@ -85,8 +85,13 @@ class GetOrCreateCurrentVersionUseCase {
                     revWalk.parseCommit(tag.objectId)?.id
                 }
 
-                // Compare the HEAD commit's ID with the tag's commit ID
-                headCommitId?.name == commitId?.name
+                if (commitId == null && headCommitId == null) {
+                    false
+                } else {
+                    // Compare the HEAD commit's ID with the tag's commit ID
+                    headCommitId?.name == commitId?.name
+                }
+
             }
         }
     }
