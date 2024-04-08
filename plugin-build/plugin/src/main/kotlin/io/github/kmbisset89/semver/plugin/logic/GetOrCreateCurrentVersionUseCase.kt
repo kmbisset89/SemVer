@@ -30,7 +30,7 @@ class GetOrCreateCurrentVersionUseCase {
         semVer: SemVer,
         gitFilePath: String?,
         baseBranchName: String?,
-        headCommit : String? = null,
+        headCommit: String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
@@ -64,7 +64,12 @@ class GetOrCreateCurrentVersionUseCase {
         val tags = git.tagList().call()
 
         return when {
-            branchType == TypeOfBranch.MAIN && checkIfLastCommitIsTagged(tags, repository, headCommit) -> semVer.toString()
+            branchType == TypeOfBranch.MAIN && checkIfLastCommitIsTagged(
+                tags,
+                repository,
+                headCommit
+            ) -> semVer.toString()
+
             branchType == TypeOfBranch.MAIN -> "${semVer.major}.${semVer.minor}.${semVer.patch}-$timeStampString"
             branchType == TypeOfBranch.RELEASE && !hasUncommittedChanges -> semVer.toString()
             branchType == TypeOfBranch.RELEASE && hasUncommittedChanges -> "${semVer.major}.${semVer.minor}.${semVer.patch + 1}-hotfix.$timeStampString"
@@ -89,13 +94,15 @@ class GetOrCreateCurrentVersionUseCase {
             return tags.any { tag ->
                 // Resolve the commit that the tag points to. This can be direct (lightweight tag) or indirect (annotated tag)
                 val commitId = if (tag.peeledObjectId != null) {
-                    revWalk.parseCommit(tag.peeledObjectId).id
+                    revWalk.parseCommit(tag.peeledObjectId)?.id
                 } else {
-                    revWalk.parseCommit(tag.objectId).id
+                    revWalk.parseCommit(tag.objectId)?.id
                 }
 
-                // Compare the specified commit's ID (or HEAD if not specified) with the tag's commit ID
-                commitToCheckId?.name == commitId.name
+                commitId?.let {
+                    // Compare the specified commit's ID (or HEAD if not specified) with the tag's commit ID
+                    commitToCheckId?.name == commitId.name
+                } ?: false
             }
         }
     }
