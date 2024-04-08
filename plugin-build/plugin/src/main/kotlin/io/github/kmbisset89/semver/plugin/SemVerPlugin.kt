@@ -1,7 +1,7 @@
 package io.github.kmbisset89.semver.plugin
 
-import io.github.kmbisset89.semver.plugin.logic.GetOrCreateCurrentVersionUseCase
 import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
+import io.github.kmbisset89.semver.plugin.logic.GetOrCreateCurrentVersionUseCase
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -13,16 +13,14 @@ abstract class SemVerPlugin : Plugin<Project> {
 
         val extension = project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
 
-        project.afterEvaluate {
-            project.version = GetOrCreateCurrentVersionUseCase().invoke(
-                DetermineCurrentVersion().determineCurrentVersion(
-                    extension.gitDirectory.orNull,
-                    extension.baseBranchName.orNull
-                ),
-                gitFilePath =  extension.gitDirectory.orNull,
-                baseBranchName = extension.baseBranchName.orNull
-            )
-        }
+        project.version = GetOrCreateCurrentVersionUseCase().invoke(
+            DetermineCurrentVersion().determineCurrentVersion(
+                extension.gitDirectory.orNull,
+                extension.baseBranchName.orNull
+            ),
+            gitFilePath = extension.gitDirectory.orNull,
+            baseBranchName = extension.baseBranchName.orNull
+        )
 
         val releaseCandidateVersionTask =
             project.tasks.register(BUMP_TASK_NAME, BumpVersionTask::class.java) {
