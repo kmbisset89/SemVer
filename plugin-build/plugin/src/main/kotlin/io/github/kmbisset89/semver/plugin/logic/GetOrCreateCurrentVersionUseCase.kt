@@ -30,6 +30,7 @@ class GetOrCreateCurrentVersionUseCase {
         semVer: SemVer,
         gitFilePath: String?,
         baseBranchName: String?,
+        headCommit : String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },

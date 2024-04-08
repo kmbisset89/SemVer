@@ -19,8 +19,9 @@ abstract class SemVerPlugin : Plugin<Project> {
                     extension.gitDirectory.orNull,
                     extension.baseBranchName.orNull
                 ),
-                gitFilePath =  extension.gitDirectory.orNull,
-                baseBranchName = extension.baseBranchName.orNull
+                gitFilePath = extension.gitDirectory.orNull,
+                baseBranchName = extension.baseBranchName.orNull,
+                headCommit = project.property("headCommit") as String?
             )
         }
 
