@@ -74,23 +74,25 @@ class GetOrCreateCurrentVersionUseCase {
 
     private fun checkIfLastCommitIsTagged(tags: List<Ref>, repository: Repository): Boolean {
         RevWalk(repository).use { revWalk ->
-            // Resolve the HEAD commit
-            val headCommitId = repository.resolve("HEAD")?.let { revWalk.parseCommit(it).id }
+            // Resolve the HEAD commit, ensuring we safely handle a potential null value
+            val headCommitId = repository.resolve("HEAD")?.let { objectId -> revWalk.parseCommit(objectId)?.id }
+
+            if (headCommitId == null) {
+                // If HEAD commit cannot be resolved, return false as it cannot be tagged
+                return false
+            }
 
             return tags.any { tag ->
-                // Resolve the commit that the tag points to. This can be direct (lightweight tag) or indirect (annotated tag)
-                val commitId = if (tag.peeledObjectId != null) {
-                    revWalk.parseCommit(tag.peeledObjectId)?.id
-                } else {
-                    revWalk.parseCommit(tag.objectId)?.id
+                // Attempt to resolve the commit ID from the tag, handling annotated and lightweight tags
+                val commitId = (if (tag.peeledObjectId != null) tag.peeledObjectId else tag.objectId)?.let { objectId ->
+                    revWalk.parseCommit(objectId)?.id
                 }
 
-                if (commitId?.name == null && headCommitId?.name == null) {
-                    false
-                } else {
+                // Only proceed with comparison if commitId is not null
+                commitId?.let {
                     // Compare the HEAD commit's ID with the tag's commit ID
-                    headCommitId?.name == commitId?.name
-                }
+                    it == headCommitId
+                } ?: false // Return false if commitId is null
             }
         }
     }
