@@ -26,6 +26,9 @@ abstract class SemVerPlugin : Plugin<Project> {
                 project = project,
                 headCommit = if (project.hasProperty("headCommit")) {
                     project.property("headCommit") as String?
+                } else null,
+                branchName = if (project.hasProperty("branchName")) {
+                    project.property("branchName") as String?
                 } else null
             )
         }

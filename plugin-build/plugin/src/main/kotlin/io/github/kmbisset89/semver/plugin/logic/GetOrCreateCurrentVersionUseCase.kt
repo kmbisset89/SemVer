@@ -33,6 +33,7 @@ class GetOrCreateCurrentVersionUseCase {
         baseBranchName: String?,
         project: Project,
         headCommit: String? = null,
+        branchName: String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
@@ -48,14 +49,14 @@ class GetOrCreateCurrentVersionUseCase {
         }
 
         val repository = repositoryFactory(gitFilePath)
-        val branchName = repository.branch
+        val branchReadableName = branchName ?: repository.branch
         project.logger.quiet("Current branch: $branchName")
 
         val branchType = when {
-            branchName == baseBranchName -> TypeOfBranch.MAIN
-            branchName.contains("release/") -> TypeOfBranch.RELEASE
-            branchName.contains("feature/") -> TypeOfBranch.FEATURE
-            branchName.contains("bugfix/") -> TypeOfBranch.BUGFIX
+            branchReadableName == baseBranchName -> TypeOfBranch.MAIN
+            branchReadableName.contains("release/") -> TypeOfBranch.RELEASE
+            branchReadableName.contains("feature/") -> TypeOfBranch.FEATURE
+            branchReadableName.contains("bugfix/") -> TypeOfBranch.BUGFIX
             else -> TypeOfBranch.DEFAULT
         }
 
