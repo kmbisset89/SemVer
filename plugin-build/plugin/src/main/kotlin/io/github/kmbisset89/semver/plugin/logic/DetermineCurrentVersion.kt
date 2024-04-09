@@ -89,7 +89,7 @@ class DetermineCurrentVersion {
             }.sortedWith(compareByDescending<Pair<SemVer, Ref>> { it.first.major }
                 .thenByDescending { it.first.minor }
                 .thenByDescending { it.first.patch }
-                .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: 0 }
+                .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?:  Int.MAX_VALUE }
             )
 
             return sortedTags.firstOrNull()?.first ?: SemVer.Default
@@ -123,7 +123,7 @@ class DetermineCurrentVersion {
         }.sortedWith(compareByDescending<Pair<SemVer, Ref>> { it.first.major }
             .thenByDescending { it.first.minor }
             .thenByDescending { it.first.patch }
-            .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: 0 }
+            .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: Int.MAX_VALUE }
         ).map { it.first }
 
         return sortedTags.firstOrNull() ?: SemVer.Default
