@@ -77,7 +77,6 @@ abstract class BumpVersionTask() : DefaultTask() {
             gitDirectory.get(),
             propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get(),
             UsernamePasswordCredentialsProvider(gitEmail.get(), gitPat.get()),
-            project = project
             )
 
         val bumpLevel = propertyResolver.getStringProp("bumpLevel")?.let {
