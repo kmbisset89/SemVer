@@ -2,6 +2,7 @@ package io.github.kmbisset89.semver.plugin
 
 import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
 import io.github.kmbisset89.semver.plugin.logic.GetOrCreateCurrentVersionUseCase
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -17,7 +18,8 @@ abstract class SemVerPlugin : Plugin<Project> {
             project.version = GetOrCreateCurrentVersionUseCase().invoke(
                 DetermineCurrentVersion().determineCurrentVersion(
                     extension.gitDirectory.orNull,
-                    extension.baseBranchName.orNull
+                    extension.baseBranchName.orNull,
+                    UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
                 ),
                 gitFilePath = extension.gitDirectory.orNull,
                 baseBranchName = extension.baseBranchName.orNull,

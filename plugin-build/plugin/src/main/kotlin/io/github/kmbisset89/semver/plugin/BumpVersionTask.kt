@@ -5,6 +5,7 @@ import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
 import io.github.kmbisset89.semver.plugin.logic.DetermineNextVersionUseCase
 import io.github.kmbisset89.semver.plugin.logic.PropertyResolver
 import io.github.kmbisset89.semver.plugin.logic.SetVersionGitTagUseCase
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.gradle.api.DefaultTask
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.provider.Property
@@ -74,8 +75,9 @@ abstract class BumpVersionTask() : DefaultTask() {
         // Determine the current project version based on Git tags.
         val currentVersion = DetermineCurrentVersion().determineCurrentVersion(
             gitDirectory.get(),
-            propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get()
-        )
+            propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get(),
+            UsernamePasswordCredentialsProvider(gitEmail.get(), gitPat.get()),
+            )
 
         val bumpLevel = propertyResolver.getStringProp("bumpLevel")?.let {
             BumpLevel.getLevel(it)

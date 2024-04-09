@@ -10,6 +10,7 @@ import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.filter.RevFilter
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import java.io.File
 
 /**
@@ -33,6 +34,7 @@ class DetermineCurrentVersion {
     fun determineCurrentVersion(
         gitFilePath: String?,
         branchName: String?,
+        credentialsProvider: UsernamePasswordCredentialsProvider,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
@@ -48,7 +50,8 @@ class DetermineCurrentVersion {
         if (branchRef == null) {
             // The branch is not found, attempt to fetch from remote and try again
             try {
-                git.fetch().setRemote("origin").setRefSpecs("+refs/heads/$branchName:refs/remotes/origin/$branchName").call()
+                git.fetch().setCredentialsProvider(credentialsProvider).setRemote("origin")
+                    .setRefSpecs("+refs/heads/$branchName:refs/remotes/origin/$branchName").call()
                 // After fetch, try to find the branch again
                 branchRef = repository.findRef(branchName)
             } catch (e: GitAPIException) {
@@ -60,13 +63,15 @@ class DetermineCurrentVersion {
         // If branchRef is still null after fetch, return default
         if (branchRef == null) return SemVer.Default
 
-        val branchObjectId: ObjectId = repository.resolve(branchName) ?: return SemVer.Default // Return default if cannot resolve branch name
+        val branchObjectId: ObjectId =
+            repository.resolve(branchName) ?: return SemVer.Default // Return default if cannot resolve branch name
 
         val revWalk = revWalkFactory(repository).apply {
             this.revFilter = RevFilter.MERGE_BASE
         }
 
-        val branchCommit: RevCommit = revWalk.parseCommit(branchObjectId) ?: return SemVer.Default // Return default if cannot parse commit
+        val branchCommit: RevCommit =
+            revWalk.parseCommit(branchObjectId) ?: return SemVer.Default // Return default if cannot parse commit
 
         val tags: List<Ref> = git.tagList().call()
 
