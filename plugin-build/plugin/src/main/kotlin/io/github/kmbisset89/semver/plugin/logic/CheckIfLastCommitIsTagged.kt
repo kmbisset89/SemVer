@@ -27,9 +27,9 @@ class CheckIfLastCommitIsTagged {
         RevWalk(repository).use { revWalk ->
             // Resolve the commit to check: use latestCommitHash if provided, otherwise default to HEAD
             val commitToCheckId = if (lastCommitHash != null) {
-                repository.resolve(lastCommitHash)?.let { revWalk.parseCommit(it).id }
+                repository.resolve(lastCommitHash)?.let { revWalk.parseCommit(it)?.id }
             } else {
-                repository.resolve("HEAD")?.let { revWalk.parseCommit(it).id }
+                repository.resolve("HEAD")?.let { revWalk.parseCommit(it)?.id }
             }
 
             logger.info(
