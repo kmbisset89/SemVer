@@ -6,6 +6,7 @@ import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.gradle.api.Project
 import java.io.File
 
 /**
@@ -30,6 +31,7 @@ class GetOrCreateCurrentVersionUseCase {
         semVer: SemVer,
         gitFilePath: String?,
         baseBranchName: String?,
+        project: Project,
         headCommit: String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
@@ -61,13 +63,11 @@ class GetOrCreateCurrentVersionUseCase {
         val hasUncommittedChanges = git.status().call().isClean.not()
 
         // Check if the last commit was tagged
-        val tags = git.tagList().call()
-
         return when {
-            branchType == TypeOfBranch.MAIN && checkIfLastCommitIsTagged(
-                tags,
-                repository,
-                headCommit
+            branchType == TypeOfBranch.MAIN && CheckIfLastCommitIsTagged().invoke(
+                project.logger,
+                gitFilePath,
+                headCommit,
             ) -> semVer.toString()
 
             branchType == TypeOfBranch.MAIN -> "${semVer.major}.${semVer.minor}.${semVer.patch}-$timeStampString"
@@ -75,38 +75,6 @@ class GetOrCreateCurrentVersionUseCase {
             branchType == TypeOfBranch.RELEASE && hasUncommittedChanges -> "${semVer.major}.${semVer.minor}.${semVer.patch + 1}-hotfix.$timeStampString"
             branchType == TypeOfBranch.FEATURE || branchType == TypeOfBranch.BUGFIX -> "${semVer.major}.${semVer.minor}.${semVer.patch}-beta.$timeStampString"
             else -> "${semVer.major}.${semVer.minor}.${semVer.patch}-alpha.$timeStampString"
-        }
-    }
-
-    private fun checkIfLastCommitIsTagged(
-        tags: List<Ref>,
-        repository: Repository,
-        latestCommitHash: String? = null // Add an optional parameter for the latest commit hash
-    ): Boolean {
-        RevWalk(repository).use { revWalk ->
-            // Resolve the commit to check: use latestCommitHash if provided, otherwise default to HEAD
-            val commitToCheckId = if (latestCommitHash != null) {
-                revWalk.parseCommit(repository.resolve(latestCommitHash)).id
-            } else {
-                repository.resolve("HEAD")?.let { revWalk.parseCommit(it).id }
-            }
-
-            return tags.any { tag ->
-                // Resolve the commit that the tag points to. This can be direct (lightweight tag) or indirect (annotated tag)
-                val commitId = if (tag.peeledObjectId != null) {
-                    revWalk.parseCommit(tag.peeledObjectId)?.id
-                } else {
-                    revWalk.parseCommit(tag.objectId)?.id
-                }
-
-                commitId?.let {
-                    if (commitToCheckId?.name == null && commitId.name == null) {
-                        return false
-                    }
-                    // Compare the specified commit's ID (or HEAD if not specified) with the tag's commit ID
-                    commitToCheckId?.name == commitId.name
-                } ?: false
-            }
         }
     }
 
