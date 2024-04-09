@@ -57,7 +57,7 @@ class DetermineCurrentVersion {
         if (branchRef == null) {
             // The branch is not found, attempt to fetch from remote and try again
             try {
-               val remotes = git.remoteList().call()
+                val remotes = git.remoteList().call()
                 for (remote in remotes) {
                     logger.error("Fetching branch '$branchName' from remote '${remote.name}'.")
                     git.pull()
@@ -76,7 +76,7 @@ class DetermineCurrentVersion {
         }
 
         // If branchRef is still null after fetch, return default
-        if (branchRef == null){
+        if (branchRef == null) {
             logger.error("Branch '$branchName' could not be resolved. Attempting to determine version from tags.")
             val tags = git.tagList().call()
             // Assuming semVerRegex is defined to match your versioning scheme
@@ -84,12 +84,12 @@ class DetermineCurrentVersion {
                 // Extract and parse version numbers from tag names
                 val versionMatch = semVerRegex.find(tag.name.substringAfterLast("/"))
                 versionMatch?.let { matchResult ->
-                    val (major, minor, patch) = matchResult.destructured
-                    SemVer.Final(major.toInt(), minor.toInt(), patch.toInt()) to tag
+                    makeSemVer(matchResult, tag)
                 }
             }.sortedWith(compareByDescending<Pair<SemVer, Ref>> { it.first.major }
                 .thenByDescending { it.first.minor }
                 .thenByDescending { it.first.patch }
+                .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: 0 }
             )
 
             return sortedTags.firstOrNull()?.first ?: SemVer.Default
@@ -106,7 +106,7 @@ class DetermineCurrentVersion {
         }
 
         val branchCommit: RevCommit? = revWalk.parseCommit(branchObjectId)
-        if(branchCommit == null) {
+        if (branchCommit == null) {
             logger.error("Cannot parse branch commit. Unable to determine current version.")
             return SemVer.Default // Return default if cannot parse commit
         }
@@ -117,11 +117,7 @@ class DetermineCurrentVersion {
             val tagCommit = revWalk.parseCommit(tag.objectId)
             if (revWalk.isMergedInto(tagCommit, branchCommit)) {
                 semVerRegex.find(tag.name.substringAfterLast("/"))?.let { matchResult ->
-                    val (major, minor, patch, _, rc) = matchResult.destructured
-                    val semVer = rc.toIntOrNull()?.let {
-                        SemVer.ReleaseCandidate(major.toInt(), minor.toInt(), patch.toInt(), it)
-                    } ?: SemVer.Final(major.toInt(), minor.toInt(), patch.toInt())
-                    semVer to tag
+                    makeSemVer(matchResult, tag)
                 }
             } else null
         }.sortedWith(compareByDescending<Pair<SemVer, Ref>> { it.first.major }
@@ -131,5 +127,16 @@ class DetermineCurrentVersion {
         ).map { it.first }
 
         return sortedTags.firstOrNull() ?: SemVer.Default
+    }
+
+    private fun makeSemVer(
+        matchResult: MatchResult,
+        tag: Ref
+    ): Pair<SemVer, Ref> {
+        val (major, minor, patch, _, rc) = matchResult.destructured
+        val semVer = rc.toIntOrNull()?.let {
+            SemVer.ReleaseCandidate(major.toInt(), minor.toInt(), patch.toInt(), it)
+        } ?: SemVer.Final(major.toInt(), minor.toInt(), patch.toInt())
+        return semVer to tag
     }
 }
