@@ -39,17 +39,14 @@ class DetermineCurrentVersion {
         gitFilePath: String?,
         branchName: String?,
         credentialsProvider: UsernamePasswordCredentialsProvider,
-        project: Project,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
         gitFactory: (Repository) -> Git = { Git(it) },
         revWalkFactory: (Repository) -> RevWalk = { RevWalk(it) }
     ): SemVer {
-        val secondLogger = project.logger
         if (gitFilePath == null || branchName == null) {
             logger.error("Git file path or branch name is null. Unable to determine current version.")
-            secondLogger.error("Git file path or branch name is null. Unable to determine current version.")
             return SemVer.Default
         }
 
@@ -73,7 +70,6 @@ class DetermineCurrentVersion {
                 branchRef = repository.findRef(branchName)
             } catch (e: GitAPIException) {
                 logger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
-                secondLogger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
                 e.printStackTrace()
                 return SemVer.Default // Return default if fetch fails or branch still not found
             }
@@ -81,15 +77,27 @@ class DetermineCurrentVersion {
 
         // If branchRef is still null after fetch, return default
         if (branchRef == null){
-            logger.error("Cannot resolve branch name '$branchName'. Unable to determine current version.")
-            secondLogger.error("Cannot resolve branch name '$branchName'. Unable to determine current version.")
-            return SemVer.Default
+            logger.error("Branch '$branchName' could not be resolved. Attempting to determine version from tags.")
+            val tags = git.tagList().call()
+            // Assuming semVerRegex is defined to match your versioning scheme
+            val sortedTags = tags.mapNotNull { tag ->
+                // Extract and parse version numbers from tag names
+                val versionMatch = semVerRegex.find(tag.name.substringAfterLast("/"))
+                versionMatch?.let { matchResult ->
+                    val (major, minor, patch) = matchResult.destructured
+                    SemVer.Final(major.toInt(), minor.toInt(), patch.toInt()) to tag
+                }
+            }.sortedWith(compareByDescending<Pair<SemVer, Ref>> { it.first.major }
+                .thenByDescending { it.first.minor }
+                .thenByDescending { it.first.patch }
+            )
+
+            return sortedTags.firstOrNull()?.first ?: SemVer.Default
         }
 
         val branchObjectId: ObjectId? = repository.resolve(branchName)
         if (branchObjectId == null) {
             logger.error("Cannot resolve branch object id. Unable to determine current version.")
-            secondLogger.error("Cannot resolve branch object id. Unable to determine current version.")
             return SemVer.Default // Return default if cannot resolve branch object id
         }
 
@@ -100,7 +108,6 @@ class DetermineCurrentVersion {
         val branchCommit: RevCommit? = revWalk.parseCommit(branchObjectId)
         if(branchCommit == null) {
             logger.error("Cannot parse branch commit. Unable to determine current version.")
-            secondLogger.error("Cannot parse branch commit. Unable to determine current version.")
             return SemVer.Default // Return default if cannot parse commit
         }
 
