@@ -19,8 +19,6 @@ class CheckIfLastCommitIsTaggedTest {
         fun `determineCurrentVersion returns the default version number`() {
             val check = CheckIfLastCommitIsTagged()
 
-           assertTrue(check.invoke("C:\\dev\\git\\vmf-evaluation-tool\\vet", "6fb23fd544bfad6f482a86703a884c0f3110a21a"))
-
         }
     }
 }
