@@ -42,6 +42,7 @@ class GetOrCreateCurrentVersionUseCase {
         val timeStampString = now.toEpochMilliseconds().toString().substring(7)
 
         if (gitFilePath == null) {
+            project.logger.error("Git file path is not provided. Generating a default version string.")
             // Return a default version if the git file path is not provided
             return "${semVer.major}.${semVer.minor}.${semVer.patch}-alpha.$timeStampString"
         }
@@ -65,7 +66,6 @@ class GetOrCreateCurrentVersionUseCase {
         // Check if the last commit was tagged
         return when {
             branchType == TypeOfBranch.MAIN && CheckIfLastCommitIsTagged().invoke(
-//                project.logger,
                 gitFilePath,
                 headCommit,
             ) -> semVer.toString()
