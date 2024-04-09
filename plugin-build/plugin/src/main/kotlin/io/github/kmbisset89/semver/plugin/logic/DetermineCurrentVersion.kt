@@ -62,12 +62,14 @@ class DetermineCurrentVersion {
             try {
                val remotes = git.remoteList().call()
                 for (remote in remotes) {
-                    git.fetch()
+                    logger.error("Fetching branch '$branchName' from remote '${remote.name}'.")
+                    git.pull()
                         .setCredentialsProvider(credentialsProvider)
                         .setRemote(remote.name)
-                        .setRefSpecs(remote.fetchRefSpecs)
+                        .setRemoteBranchName(branchName)
                         .call()
-                }                // After fetch, try to find the branch again
+                }
+                // After fetch, try to find the branch again
                 branchRef = repository.findRef(branchName)
             } catch (e: GitAPIException) {
                 logger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
