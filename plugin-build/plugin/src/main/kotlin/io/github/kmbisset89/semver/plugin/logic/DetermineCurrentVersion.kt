@@ -2,8 +2,10 @@ package io.github.kmbisset89.semver.plugin.logic
 
 import io.github.kmbisset89.semver.plugin.logic.SemVerConstants.semVerRegex
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
+import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.filter.RevFilter
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
@@ -42,14 +44,13 @@ class DetermineCurrentVersion {
         val git = gitFactory(repository)
         val tags = git.tagList().call()
         val branchRef = repository.findRef(branchName)
-        val branchObjectId = repository.resolve(branchName)
+        val branchObjectId: ObjectId? = repository.resolve(branchName)
 
         val revWalk = revWalkFactory(repository).apply {
             this.revFilter = RevFilter.MERGE_BASE
         }
 
-        val branchCommit = revWalk.parseCommit(branchObjectId)
-
+        val branchCommit : RevCommit? = revWalk.parseCommit(branchObjectId)
 
         val sortedTags = tags.mapNotNull { tag ->
             val tagCommit = revWalk.parseCommit(tag.objectId)
