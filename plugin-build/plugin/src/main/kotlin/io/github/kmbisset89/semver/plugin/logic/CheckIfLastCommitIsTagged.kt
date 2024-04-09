@@ -5,12 +5,13 @@ import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.gradle.api.logging.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class CheckIfLastCommitIsTagged {
 
+    private val logger = LoggerFactory.getLogger(CheckIfLastCommitIsTagged::class.java)
     operator fun invoke(
-        logger: Logger,
         gitFilePath: String,
         lastCommitHash: String ? = null,
         repositoryFactory: (String) -> Repository = {

@@ -65,7 +65,7 @@ class GetOrCreateCurrentVersionUseCase {
         // Check if the last commit was tagged
         return when {
             branchType == TypeOfBranch.MAIN && CheckIfLastCommitIsTagged().invoke(
-                project.logger,
+//                project.logger,
                 gitFilePath,
                 headCommit,
             ) -> semVer.toString()
