@@ -60,9 +60,14 @@ class DetermineCurrentVersion {
         if (branchRef == null) {
             // The branch is not found, attempt to fetch from remote and try again
             try {
-                git.fetch().setCredentialsProvider(credentialsProvider).setRemote("origin")
-                    .setRefSpecs("+refs/heads/$branchName:refs/remotes/origin/$branchName").call()
-                // After fetch, try to find the branch again
+               val remotes = git.remoteList().call()
+                for (remote in remotes) {
+                    git.fetch()
+                        .setCredentialsProvider(credentialsProvider)
+                        .setRemote(remote.name)
+                        .setRefSpecs(remote.fetchRefSpecs)
+                        .call()
+                }                // After fetch, try to find the branch again
                 branchRef = repository.findRef(branchName)
             } catch (e: GitAPIException) {
                 logger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
