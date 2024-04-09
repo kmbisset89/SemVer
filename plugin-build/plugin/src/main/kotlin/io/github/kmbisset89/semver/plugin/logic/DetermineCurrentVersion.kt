@@ -11,6 +11,7 @@ import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.filter.RevFilter
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
@@ -20,6 +21,8 @@ import java.io.File
  * @constructor Creates an instance to determine the current version.
  */
 class DetermineCurrentVersion {
+
+    private val logger = LoggerFactory.getLogger(DetermineCurrentVersion::class.java)
 
     /**
      * Determines the current version of the project based on git tags.
@@ -41,7 +44,11 @@ class DetermineCurrentVersion {
         gitFactory: (Repository) -> Git = { Git(it) },
         revWalkFactory: (Repository) -> RevWalk = { RevWalk(it) }
     ): SemVer {
-        if (gitFilePath == null || branchName == null) return SemVer.Default
+        if (gitFilePath == null || branchName == null) {
+            logger.warn("Git file path or branch name is null. Unable to determine current version.")
+
+            return SemVer.Default
+        }
 
         val repository = repositoryFactory(gitFilePath)
         val git = gitFactory(repository)
@@ -55,23 +62,33 @@ class DetermineCurrentVersion {
                 // After fetch, try to find the branch again
                 branchRef = repository.findRef(branchName)
             } catch (e: GitAPIException) {
+                logger.warn("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
                 e.printStackTrace()
                 return SemVer.Default // Return default if fetch fails or branch still not found
             }
         }
 
         // If branchRef is still null after fetch, return default
-        if (branchRef == null) return SemVer.Default
+        if (branchRef == null){
+            logger.warn("Cannot resolve branch name '$branchName'. Unable to determine current version.")
+            return SemVer.Default
+        }
 
-        val branchObjectId: ObjectId =
-            repository.resolve(branchName) ?: return SemVer.Default // Return default if cannot resolve branch name
+        val branchObjectId: ObjectId? = repository.resolve(branchName)
+        if (branchObjectId == null) {
+            logger.warn("Cannot resolve branch object id. Unable to determine current version.")
+            return SemVer.Default // Return default if cannot resolve branch object id
+        }
 
         val revWalk = revWalkFactory(repository).apply {
             this.revFilter = RevFilter.MERGE_BASE
         }
 
-        val branchCommit: RevCommit =
-            revWalk.parseCommit(branchObjectId) ?: return SemVer.Default // Return default if cannot parse commit
+        val branchCommit: RevCommit? = revWalk.parseCommit(branchObjectId)
+        if(branchCommit == null) {
+            logger.warn("Cannot parse branch commit. Unable to determine current version.")
+            return SemVer.Default // Return default if cannot parse commit
+        }
 
         val tags: List<Ref> = git.tagList().call()
 
