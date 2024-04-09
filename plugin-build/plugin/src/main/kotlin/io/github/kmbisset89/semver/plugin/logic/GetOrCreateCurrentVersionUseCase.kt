@@ -49,12 +49,13 @@ class GetOrCreateCurrentVersionUseCase {
 
         val repository = repositoryFactory(gitFilePath)
         val branchName = repository.branch
+        project.logger.quiet("Current branch: $branchName")
 
         val branchType = when {
             branchName == baseBranchName -> TypeOfBranch.MAIN
-            branchName.startsWith("release/") -> TypeOfBranch.RELEASE
-            branchName.startsWith("feature/") -> TypeOfBranch.FEATURE
-            branchName.startsWith("bugfix/") -> TypeOfBranch.BUGFIX
+            branchName.contains("release/") -> TypeOfBranch.RELEASE
+            branchName.contains("feature/") -> TypeOfBranch.FEATURE
+            branchName.contains("bugfix/") -> TypeOfBranch.BUGFIX
             else -> TypeOfBranch.DEFAULT
         }
 
