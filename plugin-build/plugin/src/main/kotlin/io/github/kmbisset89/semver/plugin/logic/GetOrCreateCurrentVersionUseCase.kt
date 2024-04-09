@@ -53,10 +53,13 @@ class GetOrCreateCurrentVersionUseCase {
         project.logger.quiet("Current branch: $branchName")
 
         val branchType = when {
-            baseBranchName?.let { branchReadableName.contains(it) } ?: false -> TypeOfBranch.MAIN
             branchReadableName.contains("release/") -> TypeOfBranch.RELEASE
             branchReadableName.contains("feature/") -> TypeOfBranch.FEATURE
             branchReadableName.contains("bugfix/") -> TypeOfBranch.BUGFIX
+            branchReadableName.contains("task/") -> TypeOfBranch.DEFAULT
+            baseBranchName?.let {
+                branchReadableName == it || branchReadableName == "refs/heads/$it"
+            } ?: false -> TypeOfBranch.MAIN
             else -> TypeOfBranch.DEFAULT
         }
 
