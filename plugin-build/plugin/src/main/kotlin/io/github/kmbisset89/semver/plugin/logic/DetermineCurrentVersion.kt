@@ -2,6 +2,7 @@ package io.github.kmbisset89.semver.plugin.logic
 
 import io.github.kmbisset89.semver.plugin.logic.SemVerConstants.semVerRegex
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
@@ -42,15 +43,32 @@ class DetermineCurrentVersion {
 
         val repository = repositoryFactory(gitFilePath)
         val git = gitFactory(repository)
-        val tags = git.tagList().call()
-        val branchRef = repository.findRef(branchName)
-        val branchObjectId: ObjectId? = repository.resolve(branchName)
+
+        var branchRef = repository.findRef(branchName)
+        if (branchRef == null) {
+            // The branch is not found, attempt to fetch from remote and try again
+            try {
+                git.fetch().setRemote("origin").setRefSpecs("+refs/heads/$branchName:refs/remotes/origin/$branchName").call()
+                // After fetch, try to find the branch again
+                branchRef = repository.findRef(branchName)
+            } catch (e: GitAPIException) {
+                e.printStackTrace()
+                return SemVer.Default // Return default if fetch fails or branch still not found
+            }
+        }
+
+        // If branchRef is still null after fetch, return default
+        if (branchRef == null) return SemVer.Default
+
+        val branchObjectId: ObjectId = repository.resolve(branchName) ?: return SemVer.Default // Return default if cannot resolve branch name
 
         val revWalk = revWalkFactory(repository).apply {
             this.revFilter = RevFilter.MERGE_BASE
         }
 
-        val branchCommit : RevCommit? = revWalk.parseCommit(branchObjectId)
+        val branchCommit: RevCommit = revWalk.parseCommit(branchObjectId) ?: return SemVer.Default // Return default if cannot parse commit
+
+        val tags: List<Ref> = git.tagList().call()
 
         val sortedTags = tags.mapNotNull { tag ->
             val tagCommit = revWalk.parseCommit(tag.objectId)
