@@ -20,6 +20,7 @@ abstract class SemVerPlugin : Plugin<Project> {
                     extension.gitDirectory.orNull,
                     extension.baseBranchName.orNull,
                     UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
+                    project
                 ),
                 gitFilePath = extension.gitDirectory.orNull,
                 baseBranchName = extension.baseBranchName.orNull,

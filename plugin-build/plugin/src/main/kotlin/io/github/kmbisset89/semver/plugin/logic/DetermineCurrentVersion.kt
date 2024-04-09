@@ -11,6 +11,7 @@ import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.filter.RevFilter
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.gradle.api.Project
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -38,15 +39,17 @@ class DetermineCurrentVersion {
         gitFilePath: String?,
         branchName: String?,
         credentialsProvider: UsernamePasswordCredentialsProvider,
+        project: Project,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
         gitFactory: (Repository) -> Git = { Git(it) },
         revWalkFactory: (Repository) -> RevWalk = { RevWalk(it) }
     ): SemVer {
+        val secondLogger = project.logger
         if (gitFilePath == null || branchName == null) {
-            logger.warn("Git file path or branch name is null. Unable to determine current version.")
-
+            logger.error("Git file path or branch name is null. Unable to determine current version.")
+            secondLogger.error("Git file path or branch name is null. Unable to determine current version.")
             return SemVer.Default
         }
 
@@ -62,7 +65,8 @@ class DetermineCurrentVersion {
                 // After fetch, try to find the branch again
                 branchRef = repository.findRef(branchName)
             } catch (e: GitAPIException) {
-                logger.warn("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
+                logger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
+                secondLogger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
                 e.printStackTrace()
                 return SemVer.Default // Return default if fetch fails or branch still not found
             }
@@ -70,13 +74,15 @@ class DetermineCurrentVersion {
 
         // If branchRef is still null after fetch, return default
         if (branchRef == null){
-            logger.warn("Cannot resolve branch name '$branchName'. Unable to determine current version.")
+            logger.error("Cannot resolve branch name '$branchName'. Unable to determine current version.")
+            secondLogger.error("Cannot resolve branch name '$branchName'. Unable to determine current version.")
             return SemVer.Default
         }
 
         val branchObjectId: ObjectId? = repository.resolve(branchName)
         if (branchObjectId == null) {
-            logger.warn("Cannot resolve branch object id. Unable to determine current version.")
+            logger.error("Cannot resolve branch object id. Unable to determine current version.")
+            secondLogger.error("Cannot resolve branch object id. Unable to determine current version.")
             return SemVer.Default // Return default if cannot resolve branch object id
         }
 
@@ -86,7 +92,8 @@ class DetermineCurrentVersion {
 
         val branchCommit: RevCommit? = revWalk.parseCommit(branchObjectId)
         if(branchCommit == null) {
-            logger.warn("Cannot parse branch commit. Unable to determine current version.")
+            logger.error("Cannot parse branch commit. Unable to determine current version.")
+            secondLogger.error("Cannot parse branch commit. Unable to determine current version.")
             return SemVer.Default // Return default if cannot parse commit
         }
 
