@@ -48,6 +48,7 @@ class DetermineCurrentVersionTest {
                 val version = determineCurrentVersion.determineCurrentVersion(
                     "C:\\dev\\git\\HERC",
                     "root",
+                    mockk(),
                     mockFactory,
                     mockGitFactory,
                     revWalkFactory
