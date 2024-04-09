@@ -15,7 +15,11 @@ import java.util.Properties
 class PropertyResolver(private val project: Project, considerLocalPropertiesFile: Boolean) : IPropertyResolver {
     private val localProperties : Properties? = if (considerLocalPropertiesFile) {
         val localProps = Properties()
-        localProps.load(project.file("local.properties").inputStream())
+        if (project.file("local.properties").exists()){
+            localProps.load(project.file("local.properties").inputStream())
+        } else{
+            project.logger.warn("local.properties file not found")
+        }
         localProps
     } else {
         null
