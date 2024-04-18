@@ -12,7 +12,6 @@ import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.filter.RevFilter
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
-import org.gradle.api.Project
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -61,11 +60,15 @@ class DetermineCurrentVersion {
                 val remotes = git.remoteList().call()
                 for (remote in remotes) {
                     logger.error("Fetching branch '$branchName' from remote '${remote.name}'.")
-                    git.pull()
-                        .setCredentialsProvider(credentialsProvider)
-                        .setRemote(remote.name)
-                        .setRemoteBranchName(branchName)
-                        .call()
+                    try {
+                        git.pull()
+                            .setCredentialsProvider(credentialsProvider)
+                            .setRemote(remote.name)
+                            .setRemoteBranchName(branchName)
+                            .call()
+                    } catch (e: WrongRepositoryStateException) {
+                        logger.error(e.message)
+                    }
                 }
                 // After fetch, try to find the branch again
                 branchRef = repository.findRef(branchName)
@@ -73,8 +76,6 @@ class DetermineCurrentVersion {
                 logger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
                 e.printStackTrace()
                 return SemVer.Default // Return default if fetch fails or branch still not found
-            }  catch (e : WrongRepositoryStateException){
-                logger.error(e.message)
             }
         }
 
@@ -92,7 +93,7 @@ class DetermineCurrentVersion {
             }.sortedWith(compareByDescending<Pair<SemVer, Ref>> { it.first.major }
                 .thenByDescending { it.first.minor }
                 .thenByDescending { it.first.patch }
-                .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?:  Int.MAX_VALUE }
+                .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: Int.MAX_VALUE }
             )
 
             return sortedTags.firstOrNull()?.first ?: SemVer.Default
