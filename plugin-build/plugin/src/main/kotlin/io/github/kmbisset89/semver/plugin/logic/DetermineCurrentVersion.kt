@@ -3,6 +3,7 @@ package io.github.kmbisset89.semver.plugin.logic
 import io.github.kmbisset89.semver.plugin.logic.SemVerConstants.semVerRegex
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.GitAPIException
+import org.eclipse.jgit.api.errors.WrongRepositoryStateException
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
@@ -72,6 +73,8 @@ class DetermineCurrentVersion {
                 logger.error("Failed to fetch the branch '$branchName' from remote due to an exception: ${e.message}. Unable to determine current version.")
                 e.printStackTrace()
                 return SemVer.Default // Return default if fetch fails or branch still not found
+            }  catch (e : WrongRepositoryStateException){
+                logger.error(e.message)
             }
         }
 
