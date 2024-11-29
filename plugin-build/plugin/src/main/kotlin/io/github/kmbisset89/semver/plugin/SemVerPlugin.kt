@@ -11,35 +11,43 @@ const val BUMP_TASK_NAME = "bumpVersion"
 
 abstract class SemVerPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        val extension = createExtension(project)
+        configureVersioning(project, extension)
+        registerTasks(project, extension)
+    }
 
-        val extension = project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
+    private fun createExtension(project: Project): SemVerExtension {
+        return project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
+    }
 
+    private fun configureVersioning(project: Project, extension: SemVerExtension) {
         project.afterEvaluate {
-            project.version = GetOrCreateCurrentVersionUseCase().invoke(
-                DetermineCurrentVersion().determineCurrentVersion(
-                    extension.gitDirectory.orNull,
-                    extension.baseBranchName.orNull,
-                    UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
-                ),
-                gitFilePath = extension.gitDirectory.orNull,
-                baseBranchName = extension.baseBranchName.orNull,
-                project = project,
-                headCommit = if (project.hasProperty("headCommit")) {
-                    project.property("headCommit") as String?
-                } else null,
-                branchName = if (project.hasProperty("branchName")) {
-                    project.property("branchName") as String?
-                } else null
-            )
+            project.version = resolveVersion(project, extension)
         }
+    }
 
-        val releaseCandidateVersionTask =
-            project.tasks.register(BUMP_TASK_NAME, BumpVersionTask::class.java) {
-                it.gitDirectory.set(extension.gitDirectory)
-                it.baseBranchName.set(extension.baseBranchName)
-                it.gitEmail.set(extension.gitEmail)
-                it.gitPat.set(extension.gitPat)
-                it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
-            }
+    private fun registerTasks(project: Project, extension: SemVerExtension) {
+        project.tasks.register(BUMP_TASK_NAME, BumpVersionTask::class.java) {
+            it.gitDirectory.set(extension.gitDirectory)
+            it.baseBranchName.set(extension.baseBranchName)
+            it.gitEmail.set(extension.gitEmail)
+            it.gitPat.set(extension.gitPat)
+            it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
+        }
+    }
+
+    private fun resolveVersion(project: Project, extension: SemVerExtension): String {
+        return GetOrCreateCurrentVersionUseCase().invoke(
+            DetermineCurrentVersion().determineCurrentVersion(
+                extension.gitDirectory.orNull,
+                extension.baseBranchName.orNull,
+                UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
+            ),
+            gitFilePath = extension.gitDirectory.orNull,
+            baseBranchName = extension.baseBranchName.orNull,
+            project = project,
+            headCommit = project.findProperty("headCommit") as? String?,
+            branchName = project.findProperty("branchName") as? String?
+        )
     }
 }

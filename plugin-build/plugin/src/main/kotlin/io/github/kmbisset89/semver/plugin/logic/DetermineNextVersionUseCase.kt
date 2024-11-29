@@ -22,7 +22,7 @@ class DetermineNextVersionUseCase {
         BumpLevel.MINOR -> currentVersion.toMinor(isFinal)
         BumpLevel.MAJOR -> currentVersion.toMajor(isFinal)
     }.also {
-        println("Bumped version from $currentVersion to $it")
+        println("Bumped version from $currentVersion to $it and isFinal: $isFinal")
     }
 
     /**
