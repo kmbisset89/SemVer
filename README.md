@@ -14,7 +14,7 @@ To use the plugin, add the following to your project's `build.gradle.kts` file:
 
 ```kotlin
 plugins {
-    id("io.github.kmbisset89.semver.plugin") version "1.1.0"
+    id("io.github.kmbisset89.semver.plugin") version "1.1.1"
 }
 ```
 
@@ -22,7 +22,7 @@ For libs.toml:
 
 ```toml
 [versions]
-  semver-plugin = "1.1.0"
+  semver-plugin = "1.1.1"
 
 [plugins]
 semver-plugin = { id = "io.github.kmbisset89.semver.plugin", version.ref = "semver-plugin" }
