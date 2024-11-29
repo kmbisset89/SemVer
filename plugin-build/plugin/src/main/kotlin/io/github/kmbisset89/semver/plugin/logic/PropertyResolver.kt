@@ -167,12 +167,10 @@ class PropertyResolver(private val project: Project, considerLocalPropertiesFile
      * @return The property value as an [Any] or `defaultValue` if the property is not found.
      */
     private fun getProp(propertyName: String, defaultValue: Any? = null): Any? {
-        return when {
-            project.hasProperty(propertyName) -> project.property(propertyName)
-            project.rootProject.hasProperty(propertyName) -> project.rootProject.property(propertyName)
-            localProperties?.containsKey(propertyName) == true -> localProperties[propertyName]
-            System.getenv().containsKey(propertyName) -> System.getenv(propertyName)
-            else -> defaultValue
-        }
+        return project.findProperty(propertyName)
+            ?: project.rootProject.findProperty(propertyName)
+            ?: localProperties?.getProperty(propertyName)
+            ?: System.getenv(propertyName)
+            ?: defaultValue
     }
 }
