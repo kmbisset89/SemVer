@@ -30,7 +30,7 @@ semver-plugin = { id = "io.github.kmbisset89.semver.plugin", version.ref = "semv
 
 ### Configuration
 
-Configure the plugin via the simVerConfig extension in your Gradle build script:
+Configure the plugin via the semVerConfig extension in your Gradle build script:
 
 ***I recommend storing these in local.properties and not in your build.gradle file. This will prevent your sensitive
 information from being checked into source control.***
