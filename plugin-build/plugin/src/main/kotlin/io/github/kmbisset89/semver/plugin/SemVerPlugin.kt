@@ -2,6 +2,7 @@ package io.github.kmbisset89.semver.plugin
 
 import io.github.kmbisset89.semver.plugin.logic.DetermineCurrentVersion
 import io.github.kmbisset89.semver.plugin.logic.GetOrCreateCurrentVersionUseCase
+import io.github.kmbisset89.semver.plugin.logic.PropertyResolver
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -17,7 +18,20 @@ abstract class SemVerPlugin : Plugin<Project> {
     }
 
     private fun createExtension(project: Project): SemVerExtension {
-        return project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
+        val extension = project.extensions.create(EXTENSION_NAME, SemVerExtension::class.java, project)
+
+        // Default to using a local.properties file if one is present
+        extension.considerLocalPropertiesFile.convention(project.file("local.properties").exists())
+
+        // Resolve any initial values from available properties
+        val resolver = PropertyResolver(project, extension.considerLocalPropertiesFile.get())
+
+        extension.gitDirectory.convention(resolver.getStringProp("gitDir", project.rootDir.absolutePath))
+        extension.baseBranchName.convention(resolver.getStringProp("baseBranchName", "main"))
+        extension.gitEmail.convention(resolver.getStringProp("gitEmail", ""))
+        extension.gitPat.convention(resolver.getStringProp("gitPat", ""))
+
+        return extension
     }
 
     private fun configureVersioning(project: Project, extension: SemVerExtension) {
