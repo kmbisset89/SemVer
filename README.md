@@ -30,7 +30,10 @@ semver-plugin = { id = "io.github.kmbisset89.semver.plugin", version.ref = "semv
 
 ### Configuration
 
-Configure the plugin via the semVerConfig extension in your Gradle build script:
+By default the plugin attempts to read configuration from Gradle properties, environment variables and a
+`local.properties` file if one exists. This means you can simply apply the plugin and it will work with those values.
+If you need to override any defaults you can still use the `semVerConfig` extension:
+
 
 ***I recommend storing these in local.properties and not in your build.gradle file. This will prevent your sensitive
 information from being checked into source control.***
@@ -41,11 +44,9 @@ gitDir=path/to/your/cloned/repo
 gitEmail=yourGitEmail
 ```
 
-Then use them in your build.gradle file like so:
-The reason for this is that the local.properties file is not checked into source control by default, so your sensitive
-information will not be exposed.
-The gitDirectory is here because sometimes the git directory is not in the root of the project, so you can specify it
-here.
+Then in your build.gradle file you can override specific values as needed. The `local.properties` file is not checked
+into source control by default, keeping your sensitive information private. The gitDirectory is here because sometimes
+the git directory is not in the root of the project, so you can specify it here.
 
 ```kotlin
 semVerConfig {
@@ -74,6 +75,9 @@ semVerConfig {
     - Why: The Git repository requires authentication for pushing tags, so you need specify a personal access token
       here. I wanted to make it easy to control the token without exposing it.
 - considerLocalPropertiesFile: Flag to consider a local properties file for configuration.
+
+All of these properties may also be supplied via Gradle properties, environment variables or a `local.properties` file
+without defining the extension block.
 
 ### Usage
 
