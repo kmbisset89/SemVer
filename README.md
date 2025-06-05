@@ -34,6 +34,7 @@ By default the plugin attempts to read configuration from Gradle properties, env
 `local.properties` file if one exists. This means you can simply apply the plugin and it will work with those values.
 If you need to override any defaults you can still use the `semVerConfig` extension:
 
+
 ***I recommend storing these in local.properties and not in your build.gradle file. This will prevent your sensitive
 information from being checked into source control.***
 
