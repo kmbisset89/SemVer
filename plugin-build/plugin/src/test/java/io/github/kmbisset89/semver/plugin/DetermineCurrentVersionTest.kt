@@ -49,6 +49,7 @@ class DetermineCurrentVersionTest {
                     "C:\\dev\\git\\HERC",
                     "root",
                     mockk(),
+                    null,
                     mockFactory,
                     mockGitFactory,
                     revWalkFactory

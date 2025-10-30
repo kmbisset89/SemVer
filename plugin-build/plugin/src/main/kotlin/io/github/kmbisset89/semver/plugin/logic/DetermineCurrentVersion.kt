@@ -39,6 +39,7 @@ class DetermineCurrentVersion {
         gitFilePath: String?,
         branchName: String?,
         credentialsProvider: UsernamePasswordCredentialsProvider,
+        subProjectTag: String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
@@ -83,10 +84,14 @@ class DetermineCurrentVersion {
         if (branchRef == null) {
             logger.error("Branch '$branchName' could not be resolved. Attempting to determine version from tags.")
             val tags = git.tagList().call()
-            // Assuming semVerRegex is defined to match your versioning scheme
+            // Filter tags by subProjectTag prefix when provided
             val sortedTags = tags.mapNotNull { tag ->
+                val localName = tag.name.substringAfterLast("/")
+                if (!subProjectTag.isNullOrBlank() && !localName.startsWith("${subProjectTag}-")) {
+                    return@mapNotNull null
+                }
                 // Extract and parse version numbers from tag names
-                val versionMatch = semVerRegex.find(tag.name.substringAfterLast("/"))
+                val versionMatch = semVerRegex.find(localName)
                 versionMatch?.let { matchResult ->
                     makeSemVer(matchResult, tag)
                 }
@@ -118,9 +123,13 @@ class DetermineCurrentVersion {
         val tags: List<Ref> = git.tagList().call()
 
         val sortedTags = tags.mapNotNull { tag ->
+            val localName = tag.name.substringAfterLast("/")
+            if (!subProjectTag.isNullOrBlank() && !localName.startsWith("${subProjectTag}-")) {
+                return@mapNotNull null
+            }
             val tagCommit = revWalk.parseCommit(tag.objectId)
             if (revWalk.isMergedInto(tagCommit, branchCommit)) {
-                semVerRegex.find(tag.name.substringAfterLast("/"))?.let { matchResult ->
+                semVerRegex.find(localName)?.let { matchResult ->
                     makeSemVer(matchResult, tag)
                 }
             } else null
