@@ -32,6 +32,7 @@ class SetVersionGitTagUseCase {
         gitPat: String,
         version: SemVer,
         overrideBranch: String?,
+        subProjectTag: String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
@@ -49,11 +50,15 @@ class SetVersionGitTagUseCase {
 
         // Prepare the credentials for pushing the tag to the remote repository.
         val credProvider = UsernamePasswordCredentialsProvider(gitUser, gitPat)
-        // Determine the tag name based on the version and optional branch override.
-        val tagName = if (overrideBranch == null) {
+        // Determine the tag name based on the version and optional prefixes.
+        val prefixes = buildList {
+            if (!subProjectTag.isNullOrBlank()) add(subProjectTag)
+            if (!overrideBranch.isNullOrBlank()) add(overrideBranch)
+        }
+        val tagName = if (prefixes.isEmpty()) {
             "v$version"
         } else {
-            "$overrideBranch-v$version"
+            prefixes.joinToString(separator = "-") + "-v$version"
         }
         // Create the tag in the local repository.
         git.tag().setName(tagName).call()

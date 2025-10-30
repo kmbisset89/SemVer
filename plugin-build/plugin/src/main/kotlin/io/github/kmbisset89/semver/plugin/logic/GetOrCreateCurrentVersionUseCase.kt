@@ -34,6 +34,9 @@ class GetOrCreateCurrentVersionUseCase {
         project: Project,
         headCommit: String? = null,
         branchName: String? = null,
+        betaBranchPrefixes: List<String>? = null,
+        betaIncrementStrategy: String? = null,
+        subProjectTag: String? = null,
         repositoryFactory: (String) -> Repository = {
             FileRepositoryBuilder().setGitDir(File("$it${File.separator}.git")).readEnvironment().findGitDir().build()
         },
@@ -50,16 +53,16 @@ class GetOrCreateCurrentVersionUseCase {
 
         val repository = repositoryFactory(gitFilePath)
         val branchReadableName = branchName ?: repository.branch
-        project.logger.quiet("Current branch: $branchName")
+        val shortBranchName = branchReadableName.removePrefix("refs/heads/")
+        project.logger.quiet("Current branch: $shortBranchName")
+
+        val configuredBetaPrefixes = betaBranchPrefixes ?: listOf("feature/", "feat/", "bugfix/", "fix/")
 
         val branchType = when {
-            branchReadableName.contains("release/") -> TypeOfBranch.RELEASE
-            branchReadableName.contains("feature/") -> TypeOfBranch.FEATURE
-            branchReadableName.contains("bugfix/") -> TypeOfBranch.BUGFIX
-            branchReadableName.contains("task/") -> TypeOfBranch.DEFAULT
-            baseBranchName?.let {
-                branchReadableName == it || branchReadableName == "refs/heads/$it"
-            } ?: false -> TypeOfBranch.MAIN
+            shortBranchName.startsWith("release/") -> TypeOfBranch.RELEASE
+            shortBranchName.startsWith("task/") -> TypeOfBranch.DEFAULT
+            baseBranchName?.let { shortBranchName == it } ?: false -> TypeOfBranch.MAIN
+            configuredBetaPrefixes.any { prefix -> shortBranchName.startsWith(prefix) } -> TypeOfBranch.FEATURE
             else -> TypeOfBranch.DEFAULT
         }
 
@@ -78,12 +81,44 @@ class GetOrCreateCurrentVersionUseCase {
             branchType == TypeOfBranch.MAIN -> "${semVer.major}.${semVer.minor}.${semVer.patch}-$timeStampString"
             branchType == TypeOfBranch.RELEASE && !hasUncommittedChanges -> semVer.toString()
             branchType == TypeOfBranch.RELEASE && hasUncommittedChanges -> "${semVer.major}.${semVer.minor}.${semVer.patch + 1}-hotfix.$timeStampString"
-            branchType == TypeOfBranch.FEATURE || branchType == TypeOfBranch.BUGFIX -> "${semVer.major}.${semVer.minor}.${semVer.patch}-beta.$timeStampString"
+            branchType == TypeOfBranch.FEATURE || branchType == TypeOfBranch.BUGFIX -> {
+                val useSequential = betaIncrementStrategy.equals("SEQUENTIAL", ignoreCase = true)
+                if (useSequential) {
+                    val next = nextBetaNumber(git, semVer, subProjectTag)
+                    "${semVer.major}.${semVer.minor}.${semVer.patch}-beta.$next"
+                } else {
+                    "${semVer.major}.${semVer.minor}.${semVer.patch}-beta.$timeStampString"
+                }
+            }
             else -> "${semVer.major}.${semVer.minor}.${semVer.patch}-alpha.$timeStampString"
         }
     }
 
     private enum class TypeOfBranch {
         MAIN, FEATURE, RELEASE, BUGFIX, DEFAULT
+    }
+
+    private fun nextBetaNumber(git: Git, semVer: SemVer, subProjectTag: String?): Int {
+        val tags = git.tagList().call()
+        val localNames = tags.map { it.name.substringAfterLast("/") }
+
+        val filtered = localNames.filter { localName ->
+            if (subProjectTag.isNullOrBlank()) true else localName.startsWith("$subProjectTag-")
+        }
+
+        val regex = SemVerConstants.betaRegex
+
+        val maxForBase = filtered.mapNotNull { name ->
+            val m = regex.find(name)?.groupValues
+            if (m != null && m.size >= 5) {
+                val major = m[1].toInt()
+                val minor = m[2].toInt()
+                val patch = m[3].toInt()
+                val n = m[4].toInt()
+                if (major == semVer.major && minor == semVer.minor && patch == semVer.patch) n else null
+            } else null
+        }.maxOrNull() ?: 0
+
+        return maxForBase + 1
     }
 }

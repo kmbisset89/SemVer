@@ -30,6 +30,14 @@ abstract class SemVerPlugin : Plugin<Project> {
         extension.baseBranchName.convention(resolver.getStringProp("baseBranchName", "main"))
         extension.gitEmail.convention(resolver.getStringProp("gitEmail", ""))
         extension.gitPat.convention(resolver.getStringProp("gitPat", ""))
+        extension.subProjectTag.convention(resolver.getStringProp("subProjectTag", ""))
+        extension.betaBranchPrefixes.convention(
+            resolver.getStringListProp(
+                "betaBranchPrefixes",
+                listOf("feature/", "feat/", "bugfix/", "fix/")
+            ) ?: listOf("feature/", "feat/", "bugfix/", "fix/")
+        )
+        extension.betaIncrementStrategy.convention(resolver.getStringProp("betaIncrementStrategy", "TIMESTAMP"))
 
         return extension
     }
@@ -47,6 +55,7 @@ abstract class SemVerPlugin : Plugin<Project> {
             it.gitEmail.set(extension.gitEmail)
             it.gitPat.set(extension.gitPat)
             it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
+            it.subProjectTag.set(extension.subProjectTag)
         }
     }
 
@@ -56,12 +65,16 @@ abstract class SemVerPlugin : Plugin<Project> {
                 extension.gitDirectory.orNull,
                 extension.baseBranchName.orNull,
                 UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
+                extension.subProjectTag.orNull
             ),
             gitFilePath = extension.gitDirectory.orNull,
             baseBranchName = extension.baseBranchName.orNull,
             project = project,
             headCommit = project.findProperty("headCommit") as? String?,
-            branchName = project.findProperty("branchName") as? String?
+            branchName = project.findProperty("branchName") as? String?,
+            betaBranchPrefixes = extension.betaBranchPrefixes.orNull,
+            betaIncrementStrategy = extension.betaIncrementStrategy.orNull,
+            subProjectTag = extension.subProjectTag.orNull
         )
     }
 }

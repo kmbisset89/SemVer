@@ -63,6 +63,11 @@ abstract class BumpVersionTask() : DefaultTask() {
     @get:Option(option = "considerLocalPropertiesFile", description = "Whether to consider the local properties file")
     abstract val considerLocalPropertiesFile: Property<Boolean>
 
+    @get:Input
+    @get:Optional
+    @get:Option(option = "subProjectTag", description = "Optional sub-project/module tag prefix to scope versioning (e.g., 'api')")
+    abstract val subProjectTag: Property<String>
+
     /**
      * Executes the version bumping task. Determines the current version, calculates the next version
      * based on the specified bump level, updates the project version, and tags the Git repository.
@@ -77,6 +82,7 @@ abstract class BumpVersionTask() : DefaultTask() {
             gitDirectory.get(),
             propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get(),
             UsernamePasswordCredentialsProvider(gitEmail.get(), gitPat.get()),
+            subProjectTag.orNull
             )
 
         val bumpLevel = propertyResolver.getStringProp("bumpLevel")?.let {
@@ -99,6 +105,7 @@ abstract class BumpVersionTask() : DefaultTask() {
             gitPat.get(),
             newVersion,
             propertyResolver.getStringProp("overrideBranch"),
+            subProjectTag.orNull
         )
 
         // Update the Gradle project version to the new semantic version.
