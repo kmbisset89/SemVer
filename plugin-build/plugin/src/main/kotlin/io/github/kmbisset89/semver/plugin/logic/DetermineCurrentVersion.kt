@@ -87,7 +87,9 @@ class DetermineCurrentVersion {
             // Filter tags by subProjectTag prefix when provided
             val sortedTags = tags.mapNotNull { tag ->
                 val localName = tag.name.substringAfterLast("/")
-                if (!subProjectTag.isNullOrBlank() && !localName.startsWith("${subProjectTag}-")) {
+                if (!subProjectTag.isNullOrBlank() &&
+                    !(localName.startsWith("${subProjectTag}-") || localName.endsWith("-${subProjectTag}"))
+                ) {
                     return@mapNotNull null
                 }
                 // Extract and parse version numbers from tag names
@@ -101,7 +103,7 @@ class DetermineCurrentVersion {
                 .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: Int.MAX_VALUE }
             )
 
-            return sortedTags.firstOrNull()?.first ?: SemVer.Default
+            return sortedTags.firstOrNull()?.first ?: SemVer.Final(0, 1, 0)
         }
 
         val branchObjectId: ObjectId? = repository.resolve(branchName)
@@ -124,7 +126,9 @@ class DetermineCurrentVersion {
 
         val sortedTags = tags.mapNotNull { tag ->
             val localName = tag.name.substringAfterLast("/")
-            if (!subProjectTag.isNullOrBlank() && !localName.startsWith("${subProjectTag}-")) {
+            if (!subProjectTag.isNullOrBlank() &&
+                !(localName.startsWith("${subProjectTag}-") || localName.endsWith("-${subProjectTag}"))
+            ) {
                 return@mapNotNull null
             }
             val tagCommit = revWalk.parseCommit(tag.objectId)
@@ -139,7 +143,7 @@ class DetermineCurrentVersion {
             .thenByDescending { (it.first as? SemVer.ReleaseCandidate)?.releaseCandidateNumber ?: Int.MAX_VALUE }
         ).map { it.first }
 
-        return sortedTags.firstOrNull() ?: SemVer.Default
+        return sortedTags.firstOrNull() ?: SemVer.Final(0, 1, 0)
     }
 
     private fun makeSemVer(

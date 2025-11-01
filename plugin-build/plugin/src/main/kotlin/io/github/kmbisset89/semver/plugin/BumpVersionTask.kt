@@ -65,7 +65,10 @@ abstract class BumpVersionTask() : DefaultTask() {
 
     @get:Input
     @get:Optional
-    @get:Option(option = "subProjectTag", description = "Optional sub-project/module tag prefix to scope versioning (e.g., 'api')")
+    @get:Option(
+        option = "subProjectTag",
+        description = "Optional sub-project/module tag prefix to scope versioning (e.g., 'api')"
+    )
     abstract val subProjectTag: Property<String>
 
     /**
@@ -83,7 +86,7 @@ abstract class BumpVersionTask() : DefaultTask() {
             propertyResolver.getStringProp("overrideBranch") ?: baseBranchName.get(),
             UsernamePasswordCredentialsProvider(gitEmail.get(), gitPat.get()),
             subProjectTag.orNull
-            )
+        )
 
         val bumpLevel = propertyResolver.getStringProp("bumpLevel")?.let {
             BumpLevel.getLevel(it)

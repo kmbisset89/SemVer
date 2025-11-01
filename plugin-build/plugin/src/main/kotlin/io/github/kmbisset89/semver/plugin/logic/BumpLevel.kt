@@ -1,5 +1,11 @@
 package io.github.kmbisset89.semver.plugin.logic
 
+import io.github.kmbisset89.semver.plugin.logic.BumpLevel.MAJOR
+import io.github.kmbisset89.semver.plugin.logic.BumpLevel.MINOR
+import io.github.kmbisset89.semver.plugin.logic.BumpLevel.PATCH
+import io.github.kmbisset89.semver.plugin.logic.BumpLevel.RELEASE_CANDIDATE
+
+
 /**
  * Enumerates the different levels at which a software version number can be incremented.
  *
@@ -13,14 +19,15 @@ enum class BumpLevel {
     MINOR,
     PATCH,
     RELEASE_CANDIDATE;
-    companion object{
+
+    companion object {
 
         fun getLevel(string: String): BumpLevel {
-            return when(string.lowercase()){
+            return when (string.lowercase()) {
                 "major", "m" -> MAJOR
                 "minor", "n" -> MINOR
                 "patch", "p" -> PATCH
-                else ->  RELEASE_CANDIDATE
+                else -> RELEASE_CANDIDATE
             }
         }
     }
