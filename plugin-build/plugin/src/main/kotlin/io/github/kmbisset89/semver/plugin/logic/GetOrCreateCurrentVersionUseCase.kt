@@ -2,9 +2,7 @@ package io.github.kmbisset89.semver.plugin.logic
 
 import kotlinx.datetime.Clock
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
-import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.gradle.api.Project
 import java.io.File
@@ -90,6 +88,7 @@ class GetOrCreateCurrentVersionUseCase {
                     "${semVer.major}.${semVer.minor}.${semVer.patch}-beta.$timeStampString"
                 }
             }
+
             else -> "${semVer.major}.${semVer.minor}.${semVer.patch}-alpha.$timeStampString"
         }
     }
@@ -103,7 +102,9 @@ class GetOrCreateCurrentVersionUseCase {
         val localNames = tags.map { it.name.substringAfterLast("/") }
 
         val filtered = localNames.filter { localName ->
-            if (subProjectTag.isNullOrBlank()) true else localName.startsWith("$subProjectTag-")
+            if (subProjectTag.isNullOrBlank()) true else (
+                localName.startsWith("$subProjectTag-") || localName.endsWith("-$subProjectTag")
+                )
         }
 
         val regex = SemVerConstants.betaRegex

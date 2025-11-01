@@ -79,6 +79,78 @@ semVerConfig {
 All of these properties may also be supplied via Gradle properties, environment variables or a `local.properties` file
 without defining the extension block.
 
+### Module-scoped versioning (per-folder/module)
+
+You can assign independent versions to specific modules/folders. A module’s version only changes when files in its
+configured paths change. Tags for modules use a suffix scheme: `vX.Y.Z-<moduleTag>`. Global/root tags remain `vX.Y.Z`.
+
+Configure modules in the `semVerConfig` DSL:
+
+```kotlin
+semVerConfig {
+  // Define as many sub-modules as needed
+  subModule("api") {
+    // Used in tags as vX.Y.Z-api
+    filePath("api")
+    srcDir("api/src/main/kotlin")
+    srcDir("api/src/main/java")
+  }
+
+  subModule("impl") {
+    filePath("impl")
+    srcDir("impl/src")
+  }
+}
+```
+
+#### Change detection and baseline
+- Changes are detected using Git diffs limited to `filePath` and any `srcDir` entries you configure.
+- Baseline is the last tag for that module (`vX.Y.Z-<moduleTag>`). If none exists, the latest global tag is used.
+- If no tags exist at all, initial version is `0.1.0`.
+
+#### Tagging scheme
+- Global/root: `vX.Y.Z`
+- Module-scoped: `vX.Y.Z-<moduleTag>` (suffix)
+- Multiple modules changed on one commit → multiple tags on that commit are supported.
+
+#### Bumping a module vs global
+Use the same `bumpVersion` task, providing `subProjectTag` to target a module. Examples:
+
+```bash
+# Release candidate bump for global/root
+./gradlew bumpVersion -PbumpLevel=rc -PisFinal=false
+
+# Release candidate bump for a module (e.g., api)
+./gradlew bumpVersion -PsubProjectTag=api -PbumpLevel=rc -PisFinal=false
+
+# Finalize current RC for a module
+./gradlew bumpVersion -PsubProjectTag=api -PisFinal=true
+```
+
+#### Skipping publish when unchanged
+The plugin exposes booleans you can use with `onlyIf`.
+
+- For a specific module tag (e.g., `api`):
+
+```kotlin
+tasks.matching { it.name.startsWith("publish") }.configureEach {
+  onlyIf { (project.extensions.extraProperties["semver.module.api.versionChanged"] as? Boolean) == true }
+}
+```
+
+- If your project applies the plugin with `subProjectTag = "api"`, a generic flag is also available:
+
+```kotlin
+tasks.matching { it.name.startsWith("publish") }.configureEach {
+  onlyIf { (project.extensions.extraProperties["semver.versionChanged"] as? Boolean) == true }
+}
+```
+
+#### Notes and edge cases
+- If a module directory is renamed/moved, update `filePath`/`srcDir` accordingly.
+- If both global and module versions exist, they evolve independently based on their changes.
+- CI: ensure tags are fetched (e.g., GitHub Actions `fetch-depth: 0`) so change detection and tag resolution work.
+
 ### Usage
 
 The main task provided by the plugin is `bumpVersion`, which increments the project's version based on the specified

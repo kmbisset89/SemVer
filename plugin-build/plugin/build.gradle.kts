@@ -39,7 +39,18 @@ gradlePlugin {
             version = property("VERSION").toString()
             description = property("DESCRIPTION").toString()
             displayName = property("DISPLAY_NAME").toString()
-            tags.set(listOf("SemVer", "Semantic Versioning", "Versioning", "Git", "Tags", "Version", "Versioning Plugin", "Versioning Plugin for Git Tags"))
+            tags.set(
+                listOf(
+                    "SemVer",
+                    "Semantic Versioning",
+                    "Versioning",
+                    "Git",
+                    "Tags",
+                    "Version",
+                    "Versioning Plugin",
+                    "Versioning Plugin for Git Tags"
+                )
+            )
         }
     }
 }
@@ -49,13 +60,13 @@ gradlePlugin {
     vcsUrl.set(property("VCS_URL").toString())
 }
 
-java{
+java {
     withSourcesJar()
 }
 
 tasks.create("setupPluginUploadFromEnvironment") {
     doLast {
-        val localProperties = if(rootProject.file("local.properties").exists()) Properties() else null
+        val localProperties = if (rootProject.file("local.properties").exists()) Properties() else null
         localProperties?.load(FileInputStream(rootProject.file("local.properties")))
 
         val key = localProperties?.get("gradle.publish.key") as? String ?: System.getenv("GRADLE_PUBLISH_KEY")

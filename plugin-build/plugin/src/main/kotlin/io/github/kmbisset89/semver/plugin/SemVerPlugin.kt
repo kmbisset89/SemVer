@@ -45,6 +45,40 @@ abstract class SemVerPlugin : Plugin<Project> {
     private fun configureVersioning(project: Project, extension: SemVerExtension) {
         project.afterEvaluate {
             project.version = resolveVersion(project, extension)
+
+            // Compute versionChanged flags for configured sub-modules
+            if (!extension.subModules.isEmpty()) {
+                val gitDir = extension.gitDirectory.orNull ?: project.rootDir.absolutePath
+                extension.subModules.forEach { module ->
+                    val tag = module.tag.orNull ?: module.name
+                    val paths = buildList {
+                        module.filePath.orNull?.let { add(it) }
+                        addAll(module.srcDirs.orNull ?: emptyList())
+                    }.ifEmpty { listOfNotNull(module.filePath.orNull) }
+
+                    val changed = try {
+                        io.github.kmbisset89.semver.plugin.logic.ChangeDetectionUseCase().invoke(
+                            gitDir,
+                            tag,
+                            paths
+                        )
+                    } catch (e: Exception) {
+                        project.logger.warn("semver: change detection failed for module '${module.name}': ${'$'}{e.message}")
+                        false
+                    }
+
+                    module.versionChanged.set(changed)
+
+                    // Expose as extra properties for convenient onlyIf usage
+                    project.extensions.extraProperties.set("semver.module.${'$'}tag.versionChanged", changed)
+                }
+
+                // If a subProjectTag is set for this project, also expose a generic flag
+                extension.subProjectTag.orNull?.let { tag ->
+                    val changed = extension.subModules.findByName(tag)?.versionChanged?.orNull ?: false
+                    project.extensions.extraProperties.set("semver.versionChanged", changed)
+                }
+            }
         }
     }
 
