@@ -47,7 +47,7 @@ abstract class SemVerPlugin : Plugin<Project> {
             project.version = resolveVersion(project, extension)
 
             // Compute versionChanged flags for configured sub-modules
-            if (!extension.subModules.isEmpty) {
+            if (!extension.subModules.isEmpty()) {
                 val gitDir = extension.gitDirectory.orNull ?: project.rootDir.absolutePath
                 extension.subModules.forEach { module ->
                     val tag = module.tag.orNull ?: module.name
