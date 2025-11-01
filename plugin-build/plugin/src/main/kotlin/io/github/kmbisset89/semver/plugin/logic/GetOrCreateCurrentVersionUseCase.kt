@@ -103,7 +103,9 @@ class GetOrCreateCurrentVersionUseCase {
         val localNames = tags.map { it.name.substringAfterLast("/") }
 
         val filtered = localNames.filter { localName ->
-            if (subProjectTag.isNullOrBlank()) true else localName.startsWith("$subProjectTag-")
+            if (subProjectTag.isNullOrBlank()) true else (
+                localName.startsWith("$subProjectTag-") || localName.endsWith("-$subProjectTag")
+            )
         }
 
         val regex = SemVerConstants.betaRegex

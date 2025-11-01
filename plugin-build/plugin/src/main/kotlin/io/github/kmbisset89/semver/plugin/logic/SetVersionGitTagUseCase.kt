@@ -51,14 +51,12 @@ class SetVersionGitTagUseCase {
         // Prepare the credentials for pushing the tag to the remote repository.
         val credProvider = UsernamePasswordCredentialsProvider(gitUser, gitPat)
         // Determine the tag name based on the version and optional prefixes.
-        val prefixes = buildList {
-            if (!subProjectTag.isNullOrBlank()) add(subProjectTag)
-            if (!overrideBranch.isNullOrBlank()) add(overrideBranch)
-        }
-        val tagName = if (prefixes.isEmpty()) {
-            "v$version"
-        } else {
-            prefixes.joinToString(separator = "-") + "-v$version"
+        // New scheme: when a module tag (subProjectTag) is provided, use suffix style: vX.Y.Z-<moduleTag>
+        // Otherwise, keep plain global tag or optional branch prefix when provided.
+        val tagName = when {
+            !subProjectTag.isNullOrBlank() -> "v$version-$subProjectTag"
+            !overrideBranch.isNullOrBlank() -> "${overrideBranch}-v$version"
+            else -> "v$version"
         }
         // Create the tag in the local repository.
         git.tag().setName(tagName).call()
