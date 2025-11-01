@@ -52,6 +52,11 @@ abstract class SubModuleConfig @Inject constructor(val name: String, project: Pr
     // Computed flag indicating whether the module's version should change (exposed for onlyIf)
     val versionChanged: Property<Boolean> = project.objects.property(Boolean::class.java)
 
-    fun filePath(path: String) { filePath.set(path) }
-    fun srcDir(path: String) { srcDirs.add(path) }
+    fun filePath(path: String) {
+        filePath.set(path)
+    }
+
+    fun srcDir(path: String) {
+        srcDirs.add(path)
+    }
 }

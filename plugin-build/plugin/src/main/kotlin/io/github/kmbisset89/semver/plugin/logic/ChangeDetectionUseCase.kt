@@ -5,7 +5,6 @@ import org.eclipse.jgit.diff.DiffEntry
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
-import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import java.io.File
@@ -94,7 +93,12 @@ class ChangeDetectionUseCase {
 
         val diffs: List<DiffEntry> = git.diff().apply {
             setShowNameAndStatusOnly(true)
-            if (oldTree != null) setOldTree(RevTreeIterator(revWalk, oldTree)) else setOldTree(org.eclipse.jgit.treewalk.EmptyTreeIterator())
+            if (oldTree != null) setOldTree(
+                RevTreeIterator(
+                    revWalk,
+                    oldTree
+                )
+            ) else setOldTree(org.eclipse.jgit.treewalk.EmptyTreeIterator())
             setNewTree(RevTreeIterator(revWalk, headTree))
         }.call()
 

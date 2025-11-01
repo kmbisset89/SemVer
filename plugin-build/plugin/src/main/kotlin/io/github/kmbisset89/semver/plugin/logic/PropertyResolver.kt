@@ -1,7 +1,7 @@
 package io.github.kmbisset89.semver.plugin.logic
 
 import org.gradle.api.Project
-import java.util.Properties
+import java.util.*
 
 /**
  * Resolves properties from various sources including project properties, local properties file, and environment variables.
@@ -13,11 +13,11 @@ import java.util.Properties
  * @constructor Creates a [PropertyResolver] instance capable of resolving properties from specified sources.
  */
 class PropertyResolver(private val project: Project, considerLocalPropertiesFile: Boolean) : IPropertyResolver {
-    private val localProperties : Properties? = if (considerLocalPropertiesFile) {
+    private val localProperties: Properties? = if (considerLocalPropertiesFile) {
         val localProps = Properties()
-        if (project.file("local.properties").exists()){
+        if (project.file("local.properties").exists()) {
             localProps.load(project.file("local.properties").inputStream())
-        } else{
+        } else {
             project.logger.warn("local.properties file not found")
         }
         localProps
@@ -32,7 +32,7 @@ class PropertyResolver(private val project: Project, considerLocalPropertiesFile
      * @param defaultValue The default value to return if the property is not found. Defaults to `null`.
      * @return The property value as a string or `defaultValue` if the property is not found.
      */
-    override fun getStringProp(propertyName: String, defaultValue: String? ): String? {
+    override fun getStringProp(propertyName: String, defaultValue: String?): String? {
         return getProp(propertyName, defaultValue) as String?
     }
 
