@@ -63,14 +63,14 @@ abstract class SemVerPlugin : Plugin<Project> {
                             paths
                         )
                     } catch (e: Exception) {
-                        project.logger.warn("semver: change detection failed for module '${module.name}': ${'$'}{e.message}")
+                        project.logger.warn("semver: change detection failed for module '${module.name}': ${e.message}")
                         false
                     }
 
                     module.versionChanged.set(changed)
 
                     // Expose as extra properties for convenient onlyIf usage
-                    project.extensions.extraProperties.set("semver.module.${'$'}tag.versionChanged", changed)
+                    project.extensions.extraProperties.set("semver.module.$tag.versionChanged", changed)
                 }
 
                 // If a subProjectTag is set for this project, also expose a generic flag
