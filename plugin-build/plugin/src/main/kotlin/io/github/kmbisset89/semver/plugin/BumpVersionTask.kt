@@ -71,12 +71,24 @@ abstract class BumpVersionTask() : DefaultTask() {
     )
     abstract val subProjectTag: Property<String>
 
+    @get:Input
+    @get:Optional
+    abstract val fixedVersion: Property<String>
+
     /**
      * Executes the version bumping task. Determines the current version, calculates the next version
      * based on the specified bump level, updates the project version, and tags the Git repository.
      */
     @TaskAction
     fun executeTask() {
+        val fixed = fixedVersion.orNull?.trim()?.takeIf { it.isNotEmpty() }
+        if (fixed != null) {
+            logger.lifecycle(
+                "semver: bumpVersion skipped because semVerConfig.fixedVersion is set ('$fixed')."
+            )
+            return
+        }
+
         // Resolve properties, potentially considering local overrides.
         val propertyResolver = PropertyResolver(project, considerLocalPropertiesFile.orNull ?: false)
 

@@ -30,6 +30,14 @@ abstract class SemVerExtension constructor(project: Project) {
     // Strategy for generating beta identifiers: "TIMESTAMP" (default) or "SEQUENTIAL"
     val betaIncrementStrategy: Property<String> = objects.property(String::class.java)
 
+    /**
+     * When non-blank, this exact string is used for [org.gradle.api.Project.getVersion] and [SemVerRootExtension.version]
+     * instead of resolving from Git. If set from `gradle.properties`, `-PfixedVersion`, or `local.properties` (via
+     * [considerLocalPropertiesFile]), the plugin applies it during application so other plugins see the version during
+     * configuration. Values set only in the DSL are applied in `afterEvaluate` with the computed dynamic version.
+     */
+    val fixedVersion: Property<String> = objects.property(String::class.java)
+
     // Container of sub-module configurations. Each element's name is the module tag used in Git tags (suffix).
     val subModules: NamedDomainObjectContainer<SubModuleConfig> =
         project.container(SubModuleConfig::class.java)
@@ -58,5 +66,31 @@ abstract class SubModuleConfig @Inject constructor(val name: String, project: Pr
 
     fun srcDir(path: String) {
         srcDirs.add(path)
+    }
+}
+
+/**
+ * Root-level extension to expose resolved versions for the global project and for configured sub-modules.
+ * Accessible as `rootProject.extensions.getByName("semver")` or via Kotlin accessors when named `semver`.
+ */
+open class SemVerRootExtension @Inject constructor(
+    private val project: Project,
+    private val config: SemVerExtension,
+) {
+    /** Returns the resolved global/root version string (e.g., vX.Y.Z or with qualifiers depending on branch). */
+    fun version(): String = compute(null)
+
+    /** Returns the resolved version string for a given sub-module tag (e.g., tag "api" -> vX.Y.Z-api baseline). */
+    fun moduleVersion(tag: String): String = compute(tag)
+
+    /** Returns whether the module identified by [tag] was detected as changed. */
+    fun moduleVersionChanged(tag: String): Boolean {
+        val ep = project.extensions.extraProperties
+        val key = "semver.module.$tag.versionChanged"
+        return (if (ep.has(key)) ep.get(key) else null) as? Boolean ?: false
+    }
+
+    private fun compute(tag: String?): String {
+        return resolveSemVerVersionForProject(config, project, tag)
     }
 }

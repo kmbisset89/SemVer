@@ -1,6 +1,6 @@
 # Semantic Versioning Gradle Plugin 🐘
 
-[![Publish Plugin to Portal](https://github.com/kmbisset89/SemVer/actions/workflows/publish-plugin.yaml/badge.svg)](https://github.com/kmbisset89/SemVer/actions/workflows/publish-plugin.yaml) [![License](https://img.shields.io/github/license/cortinico/kotlin-android-template.svg)](LICENSE) ![Language](https://img.shields.io/github/languages/top/cortinico/kotlin-android-template?color=blue&logo=kotlin)
+[Publish Plugin to Portal](https://github.com/kmbisset89/SemVer/actions/workflows/publish-plugin.yaml) [License](LICENSE) Language
 
 This repository contains a Gradle plugin designed to automate the management of project versions
 following [Semantic Versioning (SemVer)](https://semver.org/) principles. The plugin provides tasks to bump major,
@@ -34,7 +34,6 @@ By default the plugin attempts to read configuration from Gradle properties, env
 `local.properties` file if one exists. This means you can simply apply the plugin and it will work with those values.
 If you need to override any defaults you can still use the `semVerConfig` extension:
 
-
 ***I recommend storing these in local.properties and not in your build.gradle file. This will prevent your sensitive
 information from being checked into source control.***
 
@@ -64,16 +63,16 @@ semVerConfig {
 #### Extension Properties
 
 - gitDirectory: Directory of the Git repository.
-    - Why: Sometimes the Git directory is not in the root of the project, so you can specify it here.
+  - Why: Sometimes the Git directory is not in the root of the project, so you can specify it here.
 - baseBranchName: The base branch for versioning.
-    - Why: Sometimes the base branch is not the main branch, so you can specify it here. Such as needing to control a
-      specific release branch.
+  - Why: Sometimes the base branch is not the main branch, so you can specify it here. Such as needing to control a
+  specific release branch.
 - gitEmail: Email to use for Git operations.
-    - Why: Sometimes the email is not set in the Git configuration, so you can specify it here. Also, reading from the
-      local properties file is a good way to keep sensitive information out of the build.gradle file.
+  - Why: Sometimes the email is not set in the Git configuration, so you can specify it here. Also, reading from the
+  local properties file is a good way to keep sensitive information out of the build.gradle file.
 - gitPat: Personal access token for Git operations.
-    - Why: The Git repository requires authentication for pushing tags, so you need specify a personal access token
-      here. I wanted to make it easy to control the token without exposing it.
+  - Why: The Git repository requires authentication for pushing tags, so you need specify a personal access token
+  here. I wanted to make it easy to control the token without exposing it.
 - considerLocalPropertiesFile: Flag to consider a local properties file for configuration.
 
 All of these properties may also be supplied via Gradle properties, environment variables or a `local.properties` file
@@ -104,16 +103,19 @@ semVerConfig {
 ```
 
 #### Change detection and baseline
+
 - Changes are detected using Git diffs limited to `filePath` and any `srcDir` entries you configure.
 - Baseline is the last tag for that module (`vX.Y.Z-<moduleTag>`). If none exists, the latest global tag is used.
 - If no tags exist at all, initial version is `0.1.0`.
 
 #### Tagging scheme
+
 - Global/root: `vX.Y.Z`
 - Module-scoped: `vX.Y.Z-<moduleTag>` (suffix)
 - Multiple modules changed on one commit → multiple tags on that commit are supported.
 
 #### Bumping a module vs global
+
 Use the same `bumpVersion` task, providing `subProjectTag` to target a module. Examples:
 
 ```bash
@@ -128,6 +130,7 @@ Use the same `bumpVersion` task, providing `subProjectTag` to target a module. E
 ```
 
 #### Skipping publish when unchanged
+
 The plugin exposes booleans you can use with `onlyIf`.
 
 - For a specific module tag (e.g., `api`):
@@ -146,7 +149,41 @@ tasks.matching { it.name.startsWith("publish") }.configureEach {
 }
 ```
 
+#### Root extension to read versions from any module
+
+The plugin exposes a typed `semver` extension on every project, so you can access versions without casting.
+
+Examples (Kotlin DSL):
+
+```kotlin
+// In a subproject (e.g., :api)
+publishing {
+  publications {
+    create<MavenPublication>("api") {
+      from(components["java"]) // or "release" for Android
+      groupId = "com.yourco"
+      artifactId = "api"
+      // Use the api module's SemVer (no casting)
+      version = semver.moduleVersion("api")
+    }
+  }
+}
+
+// Access from any project
+println("Global version: ${semver.version()}")
+println("API version: ${semver.moduleVersion("api")}")
+```
+
+You can also gate publishing on whether that module changed:
+
+```kotlin
+tasks.matching { it.name.startsWith("publish") }.configureEach {
+  onlyIf { semver.moduleVersionChanged("api") }
+}
+```
+
 #### Notes and edge cases
+
 - If a module directory is renamed/moved, update `filePath`/`srcDir` accordingly.
 - If both global and module versions exist, they evolve independently based on their changes.
 - CI: ensure tags are fetched (e.g., GitHub Actions `fetch-depth: 0`) so change detection and tag resolution work.
@@ -228,7 +265,7 @@ Once you have done that, you can use the gradle task from then on out.
 ### How It Works
 
 1. Determine Current Version: The plugin identifies the current version based on the latest Git tag following SemVer
-   principles.
+  principles.
 2. Version Bumping: Based on the executed task, the plugin calculates the next version number.
 3. Tagging and Updating: The new version is both set as the project's version and tagged in the Git repository.
 
@@ -236,10 +273,10 @@ Once you have done that, you can use the gradle task from then on out.
 
 - **Automatic Version Detection**: Determines the project's current version based on Git tags.
 - **Version Bumping**: Supports incrementing major, minor, patch versions, and creating or incrementing release
-  candidates.
+candidates.
 - **Git Tagging**: Automatically tags the repository with the new version after bumping.
 - **Customizable Git Configuration**: Allows specifying the Git directory, branch, user, and personal access token (PAT)
-  for operations requiring authentication.
+for operations requiring authentication.
 
 ## Contributing 🤝
 

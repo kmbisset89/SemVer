@@ -13,6 +13,9 @@ const val BUMP_TASK_NAME = "bumpVersion"
 abstract class SemVerPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = createExtension(project)
+        // Create a typed helper extension on every project for type-safe accessors in Kotlin DSL
+        project.extensions.create("semver", SemVerRootExtension::class.java, project, extension)
+        applyHardVersionIfPresent(project, extension)
         configureVersioning(project, extension)
         registerTasks(project, extension)
     }
@@ -39,12 +42,17 @@ abstract class SemVerPlugin : Plugin<Project> {
         )
         extension.betaIncrementStrategy.convention(resolver.getStringProp("betaIncrementStrategy", "TIMESTAMP"))
 
+        resolver.getStringProp("fixedVersion", null)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { extension.fixedVersion.set(it) }
+
         return extension
     }
 
     private fun configureVersioning(project: Project, extension: SemVerExtension) {
         project.afterEvaluate {
-            project.version = resolveVersion(project, extension)
+            project.version = resolveSemVerVersionForProject(extension, project, extension.subProjectTag.orNull)
 
             // Compute versionChanged flags for configured sub-modules
             if (!extension.subModules.isEmpty()) {
@@ -90,25 +98,39 @@ abstract class SemVerPlugin : Plugin<Project> {
             it.gitPat.set(extension.gitPat)
             it.considerLocalPropertiesFile.set(extension.considerLocalPropertiesFile)
             it.subProjectTag.set(extension.subProjectTag)
+            it.fixedVersion.set(extension.fixedVersion)
         }
     }
 
-    private fun resolveVersion(project: Project, extension: SemVerExtension): String {
-        return GetOrCreateCurrentVersionUseCase().invoke(
-            DetermineCurrentVersion().determineCurrentVersion(
-                extension.gitDirectory.orNull,
-                extension.baseBranchName.orNull,
-                UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
-                extension.subProjectTag.orNull
-            ),
-            gitFilePath = extension.gitDirectory.orNull,
-            baseBranchName = extension.baseBranchName.orNull,
-            project = project,
-            headCommit = project.findProperty("headCommit") as? String?,
-            branchName = project.findProperty("branchName") as? String?,
-            betaBranchPrefixes = extension.betaBranchPrefixes.orNull,
-            betaIncrementStrategy = extension.betaIncrementStrategy.orNull,
-            subProjectTag = extension.subProjectTag.orNull
-        )
+    /**
+     * When [SemVerExtension.fixedVersion] is already populated (for example from `gradle.properties` or `-PfixedVersion`),
+     * set [Project.getVersion] immediately so other plugins that read the version during configuration see the final value.
+     */
+    private fun applyHardVersionIfPresent(project: Project, extension: SemVerExtension) {
+        extension.fixedVersion.orNull?.trim()?.takeIf { it.isNotEmpty() }?.let { project.version = it }
     }
+}
+
+internal fun resolveSemVerVersionForProject(
+    extension: SemVerExtension,
+    project: Project,
+    subProjectTag: String?,
+): String {
+    extension.fixedVersion.orNull?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+    return GetOrCreateCurrentVersionUseCase().invoke(
+        DetermineCurrentVersion().determineCurrentVersion(
+            extension.gitDirectory.orNull,
+            extension.baseBranchName.orNull,
+            UsernamePasswordCredentialsProvider(extension.gitEmail.orNull, extension.gitPat.orNull),
+            subProjectTag
+        ),
+        gitFilePath = extension.gitDirectory.orNull,
+        baseBranchName = extension.baseBranchName.orNull,
+        project = project,
+        headCommit = project.findProperty("headCommit") as? String?,
+        branchName = project.findProperty("branchName") as? String?,
+        betaBranchPrefixes = extension.betaBranchPrefixes.orNull,
+        betaIncrementStrategy = extension.betaIncrementStrategy.orNull,
+        subProjectTag = subProjectTag
+    )
 }
