@@ -33,6 +33,7 @@ class DetermineCurrentVersionTest {
                     every { it.resolve("root") } returns mockk()
                 }
                 val gitMock = mockk<Git>().also {
+                    every { it.remoteList().call() } returns emptyList()
                     every { it.tagList().call() } returns emptyList()
                 }
                 val revWalkMock = mockk<RevWalk>().also {
@@ -76,6 +77,7 @@ class DetermineCurrentVersionTest {
                 }
 
                 val gitMock = mockk<Git>().also {
+                    every { it.remoteList().call() } returns emptyList()
                     every { it.tagList().call() } returns listOf(refGlobal, refApi)
                 }
                 val revWalkMock = mockk<RevWalk>().also {

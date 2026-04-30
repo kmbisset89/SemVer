@@ -28,6 +28,7 @@ class ChangeDetectionUseCase {
     ): Boolean {
         val repository = repositoryFactory(gitRoot)
         val git = Git(repository)
+        RemoteTagFetcher.fetchAllTags(git, null)
         val revWalk = RevWalk(repository)
 
         try {

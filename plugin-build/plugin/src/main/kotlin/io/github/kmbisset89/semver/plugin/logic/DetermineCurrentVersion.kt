@@ -54,6 +54,9 @@ class DetermineCurrentVersion {
         val repository = repositoryFactory(gitFilePath)
         val git = gitFactory(repository)
 
+        // tagList() is local-only; align with remotes so bumps do not recreate existing tags.
+        RemoteTagFetcher.fetchAllTags(git, credentialsProvider)
+
         var branchRef = repository.findRef(branchName)
         if (branchRef == null) {
             // The branch is not found, attempt to fetch from remote and try again
