@@ -63,11 +63,12 @@ class DetermineCurrentVersion {
             try {
                 val remotes = git.remoteList().call()
                 for (remote in remotes) {
+                    val remoteTarget = GitRemoteUrlTransformer.remoteFetchTarget(remote)
                     logger.error("Fetching branch '$branchName' from remote '${remote.name}'.")
                     try {
                         git.pull()
                             .setCredentialsProvider(credentialsProvider)
-                            .setRemote(remote.name)
+                            .setRemote(remoteTarget)
                             .setRemoteBranchName(branchName)
                             .call()
                     } catch (e: WrongRepositoryStateException) {

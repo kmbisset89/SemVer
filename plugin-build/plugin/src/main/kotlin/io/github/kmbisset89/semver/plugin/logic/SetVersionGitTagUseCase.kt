@@ -1,9 +1,12 @@
 package io.github.kmbisset89.semver.plugin.logic
 
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.eclipse.jgit.transport.CredentialsProvider
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
@@ -12,6 +15,8 @@ import java.io.File
  * repository using the provided Git username and personal access token (PAT).
  */
 class SetVersionGitTagUseCase {
+
+    private val logger = LoggerFactory.getLogger(SetVersionGitTagUseCase::class.java)
 
     /**
      * @param gitPath The file system path to the local Git repository.
@@ -61,7 +66,42 @@ class SetVersionGitTagUseCase {
         git.tag().setName(tagName).call()
 
         // Push the tag to the remote repository using the provided credentials.
-        git.push().setCredentialsProvider(credProvider).setPushTags().call()
+        pushTags(git, credProvider)
+    }
+
+    private fun pushTags(git: Git, credProvider: CredentialsProvider) {
+        try {
+            git.push().setCredentialsProvider(credProvider).setPushTags().call()
+            return
+        } catch (first: GitAPIException) {
+            logger.debug("semver: JGit tag push failed: {}. Retrying with a space-safe remote URL.", first.message)
+            val remotes = try {
+                git.remoteList().call()
+            } catch (e: GitAPIException) {
+                throw first
+            }
+            for (remote in remotes) {
+                val rewritten = GitRemoteUrlTransformer.remoteFetchTarget(remote)
+                if (rewritten != remote.name) {
+                    try {
+                        git.push()
+                            .setRemote(rewritten)
+                            .setCredentialsProvider(credProvider)
+                            .setPushTags()
+                            .call()
+                        logger.info("semver: pushed tags using a space-safe URL for remote '{}'.", remote.name)
+                        return
+                    } catch (e: GitAPIException) {
+                        logger.debug("semver: rewritten URL push to '{}' failed: {}", remote.name, e.message)
+                    }
+                }
+            }
+            if (GitCliTagSynchronizer.pushTags(git.repository)) {
+                logger.info("semver: pushed tags using native git.")
+                return
+            }
+            throw first
+        }
     }
 
 
